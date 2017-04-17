@@ -5,7 +5,6 @@ import vk_requests
 from engine import bot_engine
 from api import private_data
 
-delay, last = 3, -1
 max_users_per_second = 1
 
 vk_api = vk_requests.create_api(app_id=private_data.app_id, login=private_data.login, password=private_data.password,
@@ -24,7 +23,9 @@ def set_online():
 
 threading.Thread(target=set_online).start()
 
-if __name__ == '__main__':
+
+def main():
+    delay, last = 3, -1
     while True:
         try:
             request = vk_api.messages.get(out=0, count=10, time_offset=(delay * 2))
@@ -56,3 +57,7 @@ if __name__ == '__main__':
 
         time.sleep(delay)
         delay = int(requests / max_users_per_second) + 1
+
+
+if __name__ == '__main__':
+    main()
