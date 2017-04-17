@@ -3,7 +3,7 @@ import time
 import vk_requests
 
 from engine import bot_engine
-from . import private_data
+from api import private_data
 
 delay, last = 3, -1
 max_users_per_second = 1

@@ -1,4 +1,3 @@
-#sudo pip install https://github.com/pybrain/pybrain/archive/0.3.3.zip
 from pybrain.structure import LinearLayer, SigmoidLayer, FullConnection, RecurrentNetwork
 from pybrain.supervised.trainers import BackpropTrainer
 from pybrain.datasets import SupervisedDataSet
