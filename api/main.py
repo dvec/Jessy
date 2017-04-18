@@ -12,10 +12,6 @@ vk_api = vk_requests.create_api(app_id=private_data.app_id, login=private_data.l
 names = ['Jessy', 'Джесси']
 
 
-def handle_message(words, id, vk_api, chat_id=None):
-    return bot_engine.analyze(' '.join(words))
-
-
 def set_online():
     while threading._main_thread.is_alive():
         vk_api.account.setOnline()
@@ -28,7 +24,7 @@ def main():
     delay, last = 3, -1
     while True:
         try:
-            request = vk_api.messages.get(out=0, count=10, time_offset=(delay * 2))
+            request = vk_api.messages.get(out=1, count=10, time_offset=(delay * 2))
         except vk_requests.exceptions.Timeout:
             print('ERROR')
 
@@ -41,12 +37,12 @@ def main():
                     if i.get('chat_id') is None:
                         peer_id = i.get('user_id')
                         vk_api.messages.send(user_id=i['user_id'],
-                                             message=handle_message(i['body'].split(' '), i['user_id'], vk_api))
+                                             message=bot_engine.analyze(i['body'].split(' '), i['user_id'], vk_api))
                     elif i['body'].split(' ')[0] in names:
                         peer_id = i.get('chat_id')
                         vk_api.messages.send(chat_id=i['chat_id'],
-                                             message=handle_message(i['body'].split(' ')[1:],
-                                                                    i['user_id'], vk_api, chat_id=i['chat_id']))
+                                             message=bot_engine.analyze(i['body'].split(' ')[1:],
+                                                                    i['chat_id'], vk_api))
 
                     last = i['id']
                     users_block.append(i['user_id'])
