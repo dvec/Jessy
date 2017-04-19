@@ -15,9 +15,9 @@ Also you can write dictionary for Jessy. Create 2 files in ```engine/data```: **
 Hello\Hello!\Hi
 How are you?\I'm fine\Normal\Very good
 ```
-**ignorance** file is file that programm will read when they can't find answer in the **answers** file. Gust enter in this file reports of ignorance. After that it should look like this:
+**ignorance** file is file that programm will read when can't find answer in the **answers** file. Gust enter in this file reports of ignorance. After that it should look like this:
 ```
-Ok\Nicely\I'm don't understand you!
+Ok\Nicely\I don't understand you!
 ```
 After that you can run it by enter a command:
 ```bash
