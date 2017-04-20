@@ -1,4 +1,5 @@
 import random
+import time
 from engine import api
 
 
@@ -21,8 +22,9 @@ def choose_random_user(message, vk_request, chat_id):
 
 
 def get_state(message, vk_request, chat_id):
+    start_time = time.time()
+    print(start_time)
     ping = float(api.check_ping()[5:])
-    print(ping)
     smiley = {
         ping <= 50: '&#128513;',
         50 < ping <= 70: '&#128512;',
@@ -32,7 +34,27 @@ def get_state(message, vk_request, chat_id):
         130 < ping: '&#128565;'
     }
     database_length = len(open('../engine/data/answers', 'r').readlines())
-    return 'Статус соединения с api.vk.com: ' + smiley[True] + '\nЗаписей в базе данных: ' + str(database_length)
+    return 'Статус соединения с api.vk.com: ' + smiley[True] + \
+           '\nЗаписей в базе данных: ' + str(database_length) + \
+           '\nОбработка этого сообщения заняла ' + str(time.time() - start_time)[:5] + ' сек'
+
+
+def get_random_num(message, vk_request, chat_id):
+    message = message.split(' ')
+    seed = 50
+    to_replace = {
+        'я': 'вы',
+        'ты': 'я',
+        'что': ''
+    }
+    for i in range(len(message)):
+        text_to_replace = to_replace.get(message[i])
+        message[i] = text_to_replace if text_to_replace is not None else message[i]
+
+    message = list(' '.join(message).strip())
+    for i in range(len(message)):
+        seed += ord(message[i]) * i
+    return ''.join(message) + ' с вероятностью ' + str(seed % 100)
 
 
 def get_help(message, vk_request, chat_id):
@@ -43,25 +65,26 @@ commands = {
     'название': set_chat_name,
     'кто': choose_random_user,
     'помощь': get_help,
-    'статус': get_state
+    'статус': get_state,
+    'инфа': get_random_num
 }
 
 
 def to_simple_text(text):
     ban_symbols = ['?', '!', '(', ')', '0', '9']
-    text = list(' '.join(text))
+    text = list(''.join(text))
     while len(text) != 0 and text[len(text) - 1] in ban_symbols:
         text = text[:len(text) - 1]
-    return ''.join(text).split(' ')
+    return ''.join(text)
 
 
 def analyze(message, vk_request, chat_id=None):
-    message = to_simple_text(message)
-    if message[0].lower() in commands:
-        return commands[message[0].lower()](' '.join(message[1:]), vk_request, chat_id)
+    command = to_simple_text(message[0]).lower()
+    if command in commands:
+        return commands[command](' '.join(message[1:]), vk_request, chat_id)
     else:
         with open('../engine/data/answers') as data:
-            message = (' '.join(message)).lower()
+            message = to_simple_text(' '.join(message)).lower()
             for answer in data:
                 answer = answer.split('\\')
                 if answer[0] == message:
