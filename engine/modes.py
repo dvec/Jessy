@@ -3,14 +3,16 @@ from . import commands
 from . import bot_engine
 
 
-def blocked(message, vk_request, chat_id, *args):
+def blocked(*args):
+    del args
     return 'Вы не можете отправлять мне сообщения! Вы в черном списке.'
 
 
-def normal(message, vk_request, chat_id, *args):
+def normal(message, vk_request, chat_id, user_id):
     command = bot_engine.to_simple_text(''.join(message[:1])).lower()
     if command in commands.commands['normal']:
-        return commands.commands['normal'][command](' '.join(message[1:]), vk_request, chat_id)
+        return commands.commands['normal'][command](message=' '.join(message[1:]),
+                                                    vk_request=vk_request, chat_id=chat_id, user_id=user_id)
     else:
         with open('data/answers') as data:
             message = bot_engine.to_simple_text(' '.join(message)).lower()
@@ -26,11 +28,13 @@ def normal(message, vk_request, chat_id, *args):
 
 def admin(message, vk_request, chat_id, user_id):
     if message[:1] != ['sudo']:
-        return normal(message, vk_request, chat_id)
+        return normal(message, vk_request, chat_id, user_id)
     else:
         if len(message) >= 2:
             out = commands.commands['admin'].get(message[1])
-            return out(message[2:], user_id) if out is not None else 'I can\'t find this command on my list'
+            if out is None:
+                return 'I can\'t find this command on my list'
+            return out(message=message[2:], user_id=user_id)
         else:
             return 'To few parameters'
 

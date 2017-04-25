@@ -78,12 +78,12 @@ def main():
                 requests_count += 1
                 try:
                     if chat_id is None:
-                        message = handle_message(bot_engine.analyze(message.replace('\n', ' -').split(' '),
+                        message = handle_message(bot_engine.analyze(message.replace('\n', ' —').split(' '),
                                                                     vk_api, user_id), None)
                         vk_api.messages.send(user_id=user_id, message=message)
                     elif i['body'].split(' ')[0].lower() in appeals:
                         user_name = vk_api.users.get(user_ids=[user_id])[0].get('first_name')
-                        message = handle_message(bot_engine.analyze(message.replace('\n', ' -').split(' ')[1:],
+                        message = handle_message(bot_engine.analyze(message.replace('\n', ' —').split(' ')[1:],
                                                                     vk_api, user_id, chat_id=chat_id), user_name)
                         vk_api.messages.send(chat_id=chat_id, message=message)
                     log.log('Jessy: ' + message)

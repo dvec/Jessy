@@ -4,9 +4,8 @@ from api import api
 from . import bot_engine, modes
 
 
-def delete(message, *args):
-    del args
-    message = ''.join(message)
+def delete(**kwargs):
+    message = ''.join(kwargs['message'])
     if message.find(' ') != -1:
         return 'To many parameters!'
     with open('data/users', 'r+') as file:
@@ -21,24 +20,27 @@ def delete(message, *args):
     return 'I can\'t find this person on my list!'
 
 
-def set_mode(message, user_id):
+def set_mode(**kwargs):
+    message = kwargs['message']
+    user_id = kwargs['user_id']
+
     with open('data/users', 'a') as file:
         if message[1] in modes.modes:
-            delete(message[0], user_id)
+            delete(message=message[0], user_id=user_id)
             file.write(message[0] + ':' + message[1] + '\n')
         else:
             return 'I can\'t find this mode on my list!'
     return 'Yeah, my sir'
 
 
-def get_list(*args):
-    del args
+def get_list(**kwargs):
+    del kwargs
     with open('data/users') as file:
         return '\n' + file.read()
 
 
-def get_mode(*args):
-    user_id = args[1]
+def get_mode(**kwargs):
+    user_id = kwargs['user_id']
     with open('data/users') as file:
         users = [line.strip().split(':') for line in file.readlines()]
         for user in users:
@@ -47,10 +49,12 @@ def get_mode(*args):
     return 'Error. User not found'
 
 
-def set_chat_name(title, vk_request, chat_id):
+def set_chat_name(**kwargs):
+    title = kwargs['message']
+    chat_id = kwargs['chat_id']
     if chat_id is not None:
         if title != '':
-            vk_request.messages.editChat(chat_id=chat_id, title=title)
+            kwargs['vk_request'].messages.editChat(chat_id=chat_id, title=title)
         else:
             return 'Я не вижу названия беседы'
         return ''
@@ -58,9 +62,9 @@ def set_chat_name(title, vk_request, chat_id):
         return 'Вы не в беседе!'
 
 
-def add_to_database(message, *args):
-    del args
-    data = [j.strip() for j in [i for i in ''.join(message).split('-')] if j != '']
+def add_to_database(**kwargs):
+    message = kwargs['message']
+    data = [j.strip() for j in [i for i in ''.join(message).split('—')] if j.strip() != '']
     if len(data) == 2:
         (message, answer) = data
         message = bot_engine.to_simple_text(message)
@@ -88,8 +92,9 @@ def add_to_database(message, *args):
         return 'Сообщение добавлено'
 
 
-def choose_random_user(message, vk_request, chat_id):
-    message = bot_engine.to_simple_text(message).split(' ')
+def choose_random_user(**kwargs):
+    message = bot_engine.to_simple_text(kwargs['message']).split(' ')
+    chat_id = kwargs['chat_id']
     to_replace = {
         'я': 'вы',
         'ты': 'я',
@@ -100,7 +105,7 @@ def choose_random_user(message, vk_request, chat_id):
         message[i] = text_to_replace if text_to_replace is not None else message[i]
     message = ' '.join(message)
     if chat_id is not None:
-        users = vk_request.messages.getChatUsers(chat_id=chat_id, fields=['nickname'])
+        users = kwargs['vk_request'].messages.getChatUsers(chat_id=chat_id, fields=['nickname'])
         user_id = bot_engine.get_random_num(message) % len(users)
         handle = 'это' if not message else message
         return 'Я думаю, что {} {} {}'.format(handle, users[user_id]['first_name'], users[user_id]['last_name'])
@@ -108,8 +113,8 @@ def choose_random_user(message, vk_request, chat_id):
         return 'Вы не в беседе!'
 
 
-def get_state(*args):
-    del args
+def get_state(**kwargs):
+    del kwargs
     start_time = time.time()
     ping = float(api.check_ping()[5:])
     smiley = {
@@ -127,9 +132,8 @@ def get_state(*args):
                '\nОбработка этого сообщения заняла ' + str(time.time() - start_time)[:5] + ' сек'
 
 
-def get_random_num(message, *args):
-    del args
-    message = message.split(' ')
+def get_random_num(**kwargs):
+    message = kwargs['message'].split(' ')
     to_replace = {
         'я': 'вы',
         'ты': 'я',
@@ -143,13 +147,19 @@ def get_random_num(message, *args):
     return ''.join(message) + ' с вероятностью ' + str(bot_engine.get_random_num(message) % 100)
 
 
-def get_help(*args):
-    del args
+def get_help(**kwargs):
+    del kwargs
     return '\n'.join(open('data/help').read().splitlines())
+
+
+def add_to_chat(**kwargs):
+    kwargs['vk_request'].messages.addChatUser(chat_id=1, user_id=kwargs['user_id'])
+    return 'Приятного общения!'
 
 
 def start_game(*args):
     del args
+    return 'В разработке'
 
 commands = {
     'normal': {
@@ -159,6 +169,7 @@ commands = {
         'статус': get_state,
         'учись': add_to_database,
         'инфа': get_random_num,
+        'беседа': add_to_chat,
         'игра': start_game
     },
     'admin': {
