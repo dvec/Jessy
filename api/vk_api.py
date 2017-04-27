@@ -6,6 +6,7 @@ import vk_requests
 
 from data import private_data
 from engine import bot_engine
+from api import api
 from log import log
 
 max_users_per_second = 2
@@ -23,7 +24,6 @@ def set_online():
             for user_id in vk_api.friends.getRequests()['items']:
                 vk_api.friends.add(user_id=user_id)
             log.log('The second thread worked')
-            time.sleep(300)
         except requests.exceptions.ReadTimeout as e:
             log.log('TIMEOUT ERROR: ' + str(e))
             continue
@@ -33,6 +33,17 @@ def set_online():
         except requests.exceptions.ConnectionError as e:
             log.log('CONNECTION ABORTED: ' + str(e))
             continue
+        time.sleep(600)
+
+
+def update_files():
+    while main_thread().is_alive():
+        try:
+            api.update_news()
+            log.log('The third thread worked')
+        except Exception as e:
+            log.log('UPDATING FILES ERROR: ' + str(e))
+        time.sleep(10800)
 
 
 def handle_message(message, user_name):
@@ -48,15 +59,16 @@ def handle_message(message, user_name):
 
 def main():
     last_id = (-1, -1)
+    delay = 1
     log.log('Loading is complete')
     second_thread = Thread(target=set_online)
     second_thread.start()
+    third_thread = Thread(target=update_files)
+    third_thread.start()
     log.log('Second thread started')
     while True:
-        delay = 1
         users_block = []
         requests_count = 0
-
         try:
             request = vk_api.messages.get(out=0, time_offset=delay * 2, count=200)
         except requests.exceptions.ReadTimeout as e:
@@ -88,9 +100,10 @@ def main():
                         vk_api.messages.send(chat_id=chat_id, message=message)
                     log.log('Jessy: ' + message)
                 except vk_requests.exceptions.VkAPIError as e:
-                    print('CAN\'T SEND MESSAGE: ' + str(e))
+                    log.log('CAN\'T SEND MESSAGE: ' + str(e))
+                    continue
                 except requests.exceptions.ReadTimeout as e:
-                    print('TIMEOUT EXCEPTION: ' + str(e))
+                    log.log('TIMEOUT EXCEPTION: ' + str(e))
                     continue
                 last_id = i.get('id'), i.get('user_id')
 

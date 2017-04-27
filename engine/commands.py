@@ -1,52 +1,7 @@
 import time
 
 from api import api
-from . import bot_engine, modes
-
-
-def delete(**kwargs):
-    message = ''.join(kwargs['message'])
-    if message.find(' ') != -1:
-        return 'To many parameters!'
-    with open('data/users', 'r+') as file:
-        new_file = file.readlines()
-    for i in range(len(new_file)):
-        line = new_file[i].split(':')
-        if line[0] == message.strip():
-            del new_file[i]
-            with open('data/users', 'w') as file:
-                file.writelines(new_file)
-            return 'Yeah, my sir'
-    return 'I can\'t find this person on my list!'
-
-
-def set_mode(**kwargs):
-    message = kwargs['message']
-    user_id = kwargs['user_id']
-
-    with open('data/users', 'a') as file:
-        if message[1] in modes.modes:
-            delete(message=message[0], user_id=user_id)
-            file.write(message[0] + ':' + message[1] + '\n')
-        else:
-            return 'I can\'t find this mode on my list!'
-    return 'Yeah, my sir'
-
-
-def get_list(**kwargs):
-    del kwargs
-    with open('data/users') as file:
-        return '\n' + file.read()
-
-
-def get_mode(**kwargs):
-    user_id = kwargs['user_id']
-    with open('data/users') as file:
-        users = [line.strip().split(':') for line in file.readlines()]
-        for user in users:
-            if user[0] == str(user_id):
-                return user[1] if len(user) >= 2 else '-1'
-    return 'Error. User not found'
+from . import functions
 
 
 def set_chat_name(**kwargs):
@@ -67,7 +22,7 @@ def add_to_database(**kwargs):
     data = [j.strip() for j in [i for i in ''.join(message).split('—')] if j.strip() != '']
     if len(data) == 2:
         (message, answer) = data
-        message = bot_engine.to_simple_text(message)
+        message = functions.to_simple_text(message)
     else:
         return 'Недостаточно параметров!'
     del data
@@ -93,7 +48,7 @@ def add_to_database(**kwargs):
 
 
 def choose_random_user(**kwargs):
-    message = bot_engine.to_simple_text(kwargs['message']).split(' ')
+    message = functions.to_simple_text(kwargs['message']).split(' ')
     chat_id = kwargs['chat_id']
     to_replace = {
         'я': 'вы',
@@ -106,7 +61,7 @@ def choose_random_user(**kwargs):
     message = ' '.join(message)
     if chat_id is not None:
         users = kwargs['vk_request'].messages.getChatUsers(chat_id=chat_id, fields=['nickname'])
-        user_id = bot_engine.get_random_num(message) % len(users)
+        user_id = functions.get_random_num(message) % len(users)
         handle = 'это' if not message else message
         return 'Я думаю, что {} {} {}'.format(handle, users[user_id]['first_name'], users[user_id]['last_name'])
     else:
@@ -132,7 +87,13 @@ def get_state(**kwargs):
                '\nОбработка этого сообщения заняла ' + str(time.time() - start_time)[:5] + ' сек'
 
 
-def get_random_num(**kwargs):
+def get_news(**kwargs):
+    del kwargs
+    with open('data/commands_data/news') as file:
+        return '\n' + file.read()
+
+
+def get_inf(**kwargs):
     message = kwargs['message'].split(' ')
     to_replace = {
         'я': 'вы',
@@ -144,12 +105,12 @@ def get_random_num(**kwargs):
         message[i] = text_to_replace if text_to_replace is not None else message[i]
 
     message = list(' '.join(message).strip())
-    return ''.join(message) + ' с вероятностью ' + str(bot_engine.get_random_num(message) % 100)
+    return ''.join(message) + ' с вероятностью ' + str(functions.get_random_num(message) % 100) + '%'
 
 
 def get_help(**kwargs):
     del kwargs
-    return '\n'.join(open('data/help').read().splitlines())
+    return '\n' + open('data/help').read()
 
 
 def add_to_chat(**kwargs):
@@ -168,14 +129,13 @@ commands = {
         'помощь': get_help,
         'статус': get_state,
         'учись': add_to_database,
-        'инфа': get_random_num,
+        'инфа': get_inf,
         'беседа': add_to_chat,
+        'новости': get_news,
         'игра': start_game
     },
     'admin': {
-        'del': delete,
-        'make': set_mode,
-        'list': get_list,
-        'gm': get_mode
+        'del': functions.delete_user,
+        'make': functions.set_user_mode
     }
 }

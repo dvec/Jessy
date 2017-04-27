@@ -1,7 +1,7 @@
 import time
 
 file_id = int(time.time())
-file = open(str('log/logs/' + str(file_id) + '.log'), 'a')
+file = open(str('log/logs/' + str(file_id) + '.log'), 'a+')
 
 
 def log(message):
