@@ -1,4 +1,7 @@
 # Jessy
+The information below has long since aged.
+Read it at your own peril. Also you can write a bot. She is [here](https://vk.cc/6zDg6S)
+# Obsolete launch guide
 Bot for vk. To run it you must install **vk_requests**:
 ```bash
 pip install vk_requests

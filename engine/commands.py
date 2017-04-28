@@ -27,14 +27,16 @@ def add_to_database(**kwargs):
         return 'Недостаточно параметров!'
     del data
 
-    with open('data/answers', 'r+') as file:
+    with open('data/bot_data/answers', 'r+') as file:
         file_lines = file.readlines()
-    with open('data/answers', 'r+') as file:
+    with open('data/bot_data/answers', 'r+') as file:
 
         for line_id in range(len(file_lines)):
             line = file_lines[line_id].strip().split('\\')
             if line[0] == message:
                 if answer not in line[1:]:
+                    if line[-1][-1] == '|':
+                        return 'Вы не можете научить бота такой реплике'
                     file_lines[line_id] = file_lines[line_id].strip() + '\\' + answer + '\n'
                     file.writelines(file_lines)
                     return 'Вариант сообщения добавлен'
@@ -80,7 +82,7 @@ def get_state(**kwargs):
         110.0 < ping <= 130: '&#128551;',
         130.0 < ping: '&#128565;'
     }
-    with open('data/answers', 'r') as file:
+    with open('data/bot_data/answers', 'r') as file:
         database_length = len(file.readlines())
         return 'Статус соединения с api.vk.com: ' + smiley[True] + \
                '\nЗаписей в базе данных: ' + str(database_length) + \
@@ -110,7 +112,7 @@ def get_inf(**kwargs):
 
 def get_help(**kwargs):
     del kwargs
-    return '\n' + open('data/help').read()
+    return '\n' + open('data/commands_data/help').read()
 
 
 def add_to_chat(**kwargs):

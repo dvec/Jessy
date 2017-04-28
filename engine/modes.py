@@ -36,7 +36,7 @@ def admin(message, vk_request, chat_id, user_id):
                 return 'I can\'t find this command on my list'
             return out(message=message[2:], user_id=user_id)
         else:
-            return 'To few parameters'
+            return 'Too few parameters'
 
 modes = {
     'admin': admin,

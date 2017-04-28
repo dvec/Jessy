@@ -11,8 +11,10 @@ def halt():
     sys.exit(0)
 
 
-def get_log():
-    pass
+def clear_log():
+    import os
+    for file in os.listdir('log/logs'):
+        os.remove('log/logs/' + file)
 
 
 def init():
@@ -36,6 +38,7 @@ def stable_run():
     try:
         run()
     except Exception:
+        print('Fatal error. Restarting')
         from time import sleep
         sleep(5)
         stable_run()
@@ -44,7 +47,7 @@ def stable_run():
 def main():
     init()
     cases = ((halt, 'Exit from this menu'),
-             (get_log, 'Get log of Jessy'),
+             (clear_log, 'Clear log of Jessy'),
              (emulate, 'Emulate Jessy'),
              (stable_run, 'Run Jessy with automatically restarting'),
              (run, 'Normal run without restarting'))

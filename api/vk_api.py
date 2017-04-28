@@ -33,7 +33,7 @@ def set_online():
         except requests.exceptions.ConnectionError as e:
             log.log('CONNECTION ABORTED: ' + str(e))
             continue
-        time.sleep(600)
+        time.sleep(300)
 
 
 def update_files():
@@ -47,17 +47,37 @@ def update_files():
 
 
 def handle_message(message, user_name):
-    if len(message) >= 1:  # It was 2
-        if user_name is not None:
-            message = message[0].lower() + message[1:]
-            return user_name + ', ' + message
-        else:
-            return message
+    if user_name is not None and message.strip() != '':
+        message = user_name + ', ' + message[0].lower() + message[1:]
     else:
-        return message
+        message = message[0].upper() + message[1:]
+    return message
+
+
+def get_attachments(message):
+    if message.find('<attach>') != message.find('<end>') != -1:
+        attachments = message[message.find('<attach>') + len('<attach>'):message.find('<end>')].split('; ')
+        return ','.join(attachments), message[:message.find('<attach>')]
+    else:
+        return -1, message
+
+
+def send_message(message_api, message, user_id, chat_id):
+    attachments, message = get_attachments(message)
+    if attachments == -1:
+        if chat_id is None:
+            message_api.send(user_id=user_id, message=message)
+        else:
+            message_api.send(chat_id=chat_id, message=message)
+    else:
+        if chat_id is None:
+            message_api.send(user_id=user_id, message=message, attachment=attachments)
+        else:
+            message_api.send(chat_id=chat_id, message=message, attachment=attachments)
 
 
 def main():
+    # print(get_attachments('<attach>video85635407_165186811_69dff3de4372ae9b6e<end>'))
     last_id = (-1, -1)
     delay = 1
     log.log('Loading is complete')
@@ -92,12 +112,13 @@ def main():
                     if chat_id is None:
                         message = handle_message(bot_engine.analyze(message.replace('\n', ' —').split(' '),
                                                                     vk_api, user_id), None)
-                        vk_api.messages.send(user_id=user_id, message=message)
+                        message = message[0].upper() + message[1:]
+                        send_message(vk_api.messages, message, user_id, None)
                     elif i['body'].split(' ')[0].lower() in appeals:
                         user_name = vk_api.users.get(user_ids=[user_id])[0].get('first_name')
                         message = handle_message(bot_engine.analyze(message.replace('\n', ' —').split(' ')[1:],
                                                                     vk_api, user_id, chat_id=chat_id), user_name)
-                        vk_api.messages.send(chat_id=chat_id, message=message)
+                        send_message(vk_api.messages, message, None, chat_id)
                     log.log('Jessy: ' + message)
                 except vk_requests.exceptions.VkAPIError as e:
                     log.log('CAN\'T SEND MESSAGE: ' + str(e))

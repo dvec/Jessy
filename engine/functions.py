@@ -7,7 +7,7 @@ def get_random_num(text):
 
 
 def to_simple_text(text):
-    ban_symbols = ['?', '!', '(', ')', '0', '9', ':', '.']
+    ban_symbols = ['?', '!', '(', ')', '0', '9', ':', '.', '|']
     text = list(''.join(text).strip())
     while len(text) != 0 and text[len(text) - 1] in ban_symbols:
         text = text[:len(text) - 1]
