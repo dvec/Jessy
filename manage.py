@@ -44,11 +44,36 @@ def stable_run():
         stable_run()
 
 
+def spam():
+    targets = [24261502, 59221166, 39130136, 47484197, 24261502, 59221166, 39130136,
+               47484197, 47122228, 41843539, 42590964, 61413825, 77208800, 68114314,
+               24261502, 59221166, 39130136, 47484197, 47122228, 41843539, 42590964,
+               24261502, 59221166, 39130136, 47484197, 24261502, 59221166, 24261502]
+    import vk_requests
+    import time
+    from data import private_data
+    vk_api = vk_requests.create_api(app_id=private_data.app_id, login=private_data.login,
+                                    password=private_data.password,
+                                    scope=['wall'], access_token=private_data.access_token)
+    message = 'Я чат-бот. Добавь в меня в друзья (я приму заявку через несколько минут) и поговори со мной. :)'
+    attachments = 'photo424752907_456239023'
+    for target in targets:
+        print('Message to', target, end=' ')
+        try:
+            vk_api.wall.post(owner_id=-target, message=message, attachments=attachments)
+            print('ok')
+            time.sleep(1)
+        except:
+            print('err')
+            time.sleep(1)
+
+
 def main():
     init()
     cases = ((halt, 'Exit from this menu'),
              (clear_log, 'Clear log of Jessy'),
              (emulate, 'Emulate Jessy'),
+             (spam, 'Make spam'),
              (stable_run, 'Run Jessy with automatically restarting'),
              (run, 'Normal run without restarting'))
 

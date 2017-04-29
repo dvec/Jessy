@@ -10,9 +10,9 @@ def set_chat_name(**kwargs):
     if chat_id is not None:
         if title != '':
             kwargs['vk_request'].messages.editChat(chat_id=chat_id, title=title)
+            return ''
         else:
             return 'Я не вижу названия беседы'
-        return ''
     else:
         return 'Вы не в беседе!'
 
@@ -22,9 +22,9 @@ def add_to_database(**kwargs):
     data = [j.strip() for j in [i for i in ''.join(message).split('—')] if j.strip() != '']
     if len(data) == 2:
         (message, answer) = data
-        message = functions.to_simple_text(message)
+        message = functions.to_simple_text(message).lower()
     else:
-        return 'Недостаточно параметров!'
+        return 'Неверное кол-во параметров!'
     del data
 
     with open('data/bot_data/answers', 'r+') as file:
@@ -120,8 +120,8 @@ def add_to_chat(**kwargs):
     return 'Приятного общения!'
 
 
-def start_game(*args):
-    del args
+def start_game(**kwargs):
+    del kwargs
     return 'В разработке'
 
 commands = {

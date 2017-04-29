@@ -9,7 +9,7 @@ def blocked(*args):
 
 
 def normal(message, vk_request, chat_id, user_id):
-    command = to_simple_text(''.join(message[:1])).lower()
+    command = to_simple_text(message[0] if len(message) != 0 else '').lower()
     if command in commands['normal']:
         return commands['normal'][command](message=' '.join(message[1:]),
                                            vk_request=vk_request, chat_id=chat_id, user_id=user_id)
@@ -19,11 +19,11 @@ def normal(message, vk_request, chat_id, user_id):
             for answer in data:
                 answer = answer.split('\\')
                 if answer[0] == message:
-                    return answer[random.randint(1, len(answer) - 1)]
+                    return to_simple_text(random.choice(answer[1:]), ban_symbols=['|'])
 
         with open('data/bot_data/ignorance') as file:
             data = file.readline().split('\\')
-            return random.choice(data)
+            return to_simple_text(random.choice(data))
 
 
 def admin(message, vk_request, chat_id, user_id):

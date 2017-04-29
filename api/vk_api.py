@@ -14,7 +14,6 @@ max_users_per_second = 2
 vk_api = vk_requests.create_api(app_id=private_data.app_id, login=private_data.login, password=private_data.password,
                                 scope=['messages', 'account', 'friends'], access_token=private_data.access_token)
 appeals = ['бот', 'джесси', 'бот,', 'джесси,']
-log = log
 
 
 def set_online():
@@ -22,6 +21,7 @@ def set_online():
         try:
             vk_api.account.setOnline()
             for user_id in vk_api.friends.getRequests()['items']:
+                log.log('New friend: ' + str(user_id))
                 vk_api.friends.add(user_id=user_id)
             log.log('The second thread worked')
         except requests.exceptions.ReadTimeout as e:
