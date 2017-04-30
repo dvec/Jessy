@@ -40,6 +40,9 @@ def update_files():
     while main_thread().is_alive():
         try:
             api.update_news()
+            api.update_bash()
+            api.update_ithappens()
+            api.update_zadolbali()
             log.log('The third thread worked')
         except Exception as e:
             log.log('UPDATING FILES ERROR: ' + str(e))
@@ -47,11 +50,13 @@ def update_files():
 
 
 def handle_message(message, user_name):
-    if user_name is not None and message.strip() != '':
-        message = user_name + ', ' + message[0].lower() + message[1:]
-    else:
-        message = message[0].upper() + message[1:]
-    return message
+    if len(message) >= 2:
+        if user_name is not None and message.strip() != '':
+            message = user_name + ', ' + message[0].lower() + message[1:]
+        else:
+            message = message[0].upper() + message[1:]
+        return message
+    return ''
 
 
 def get_attachments(message):
@@ -77,7 +82,6 @@ def send_message(message_api, message, user_id, chat_id):
 
 
 def main():
-    # print(get_attachments('<attach>video85635407_165186811_69dff3de4372ae9b6e<end>'))
     last_id = (-1, -1)
     delay = 1
     log.log('Loading is complete')

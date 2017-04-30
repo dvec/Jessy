@@ -8,11 +8,48 @@ def check_ping():
     return response[response.rfind('time='):response.find(' ms')]
 
 
-def update_news():
-    page = requests.get('https://lenta.ru/rss').text
+def get_data(url, begin='<![CDATA[', end=']]>'):
+    page = requests.get(url).text
     out = []
-    for i in page.split('\n'):
-        if i.strip()[:7] == '<title>':
-            out.append('&#128213;|' + i.replace('<title>', '').replace('</title>', '').strip() + '\n')
+    while page.find('<![CDATA[') != -1:
+        fr = page.find(begin)
+        to = page.find(end)
+        out.append(page[fr + len(begin):to] + '\\end\\')
+        page = page[to + len(end):]
+    out = '\n'.join(out)
+    replacements = [
+        ['</a>', ''],
+        ['<p>', ''],
+        ['</p>', ''],
+        ['<em>', ''],
+        ['</em>', ''],
+        ['<br>', '\n'],
+        ['&quot;', '"'],
+        ['>', ''],
+        ['&lt;', '<'],
+        ['&gt;', '>'],
+        ['<a href=', '']
+    ]
+    for replacement in replacements:
+        out = out.replace(replacement[0], replacement[1])
+    return out
+
+
+def update_news():
     with open('data/commands_data/news', 'w') as file:
-        file.writelines(out[2:7])
+        file.writelines(get_data('https://lenta.ru/rss'))
+
+
+def update_bash():
+    with open('data/commands_data/bash', 'w') as file:
+        file.writelines(get_data('http://bash.im/rss/'))
+
+
+def update_ithappens():
+    with open('data/commands_data/ithappens', 'w') as file:
+        file.writelines(get_data('http://ithappens.me/rss'))
+
+
+def update_zadolbali():
+    with open('data/commands_data/zadolbali', 'w') as file:
+        file.writelines(get_data('http://zadolba.li/rss'))

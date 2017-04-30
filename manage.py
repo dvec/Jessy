@@ -45,27 +45,29 @@ def stable_run():
 
 
 def spam():
-    targets = [24261502, 59221166, 39130136, 47484197, 24261502, 59221166, 39130136,
-               47484197, 47122228, 41843539, 42590964, 61413825, 77208800, 68114314,
-               24261502, 59221166, 39130136, 47484197, 47122228, 41843539, 42590964,
-               24261502, 59221166, 39130136, 47484197, 24261502, 59221166, 24261502]
     import vk_requests
     import time
     from data import private_data
     vk_api = vk_requests.create_api(app_id=private_data.app_id, login=private_data.login,
                                     password=private_data.password,
-                                    scope=['wall'], access_token=private_data.access_token)
+                                    scope=['groups', 'wall'], access_token=private_data.access_token)
     message = 'Я чат-бот. Добавь в меня в друзья (я приму заявку через несколько минут) и поговори со мной. :)'
     attachments = 'photo424752907_456239023'
+    question = 'Добавь в друзья'
+    targets = [i['id'] for i in vk_api.groups.search(q=question, count=1000)['items']]
+
     for target in targets:
-        print('Message to', target, end=' ')
+        print('Message to', target, end=': ')
         try:
-            vk_api.wall.post(owner_id=-target, message=message, attachments=attachments)
-            print('ok')
-            time.sleep(1)
-        except:
-            print('err')
-            time.sleep(1)
+            if vk_api.groups.getById(group_id=target, fields=['can_post'])[0]['can_post']:
+                vk_api.wall.post(owner_id=-target, message=message, attachments=attachments)
+                print('ok')
+                time.sleep(59)
+            else:
+                print('cp')
+        except Exception as e:
+            print('err: ', e)
+        time.sleep(1)
 
 
 def main():

@@ -18,8 +18,14 @@ def normal(message, vk_request, chat_id, user_id):
             message = to_simple_text(' '.join(message)).lower()
             for answer in data:
                 answer = answer.split('\\')
-                if answer[0] == message:
-                    return to_simple_text(random.choice(answer[1:]), ban_symbols=['|'])
+                index = answer[0].rfind('*')
+                # print(message[:index], answer[0][:index])
+                if answer[0] == message or \
+                        (index == len(answer[0]) - 1 and answer[0][:index] == message[:index]):
+                    out = to_simple_text(random.choice(answer[1:]), ban_symbols=['|', '*'])
+                    if out[0] == '$' and out[1:] != answer[0]:
+                        return normal(out[1:].split(' '), vk_request, chat_id, user_id)
+                    return out
 
         with open('data/bot_data/ignorance') as file:
             data = file.readline().split('\\')
@@ -37,6 +43,7 @@ def admin(message, vk_request, chat_id, user_id):
             return out(message=message[2:], user_id=user_id)
         else:
             return 'Too few parameters'
+
 
 modes = {
     'admin': admin,

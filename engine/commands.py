@@ -1,4 +1,5 @@
 import time
+import random
 
 from api import api
 from . import functions
@@ -92,7 +93,25 @@ def get_state(**kwargs):
 def get_news(**kwargs):
     del kwargs
     with open('data/commands_data/news') as file:
-        return '\n' + file.read()
+        return '\n' + '\n'.join(file.read().split('\\end\\')[:3])
+
+
+def get_bash(**kwargs):
+    del kwargs
+    with open('data/commands_data/bash') as file:
+        return random.choice(file.read().split('\\end\\'))[:2000]
+
+
+def get_ithappens(**kwargs):
+    del kwargs
+    with open('data/commands_data/ithappens') as file:
+        return random.choice(file.read().split('\\end\\'))[:2000]
+
+
+def get_zadolbali(**kwargs):
+    del kwargs
+    with open('data/commands_data/zadolbali') as file:
+        return random.choice(file.read().split('\\end\\'))[:2000]
 
 
 def get_inf(**kwargs):
@@ -134,6 +153,9 @@ commands = {
         'инфа': get_inf,
         'беседа': add_to_chat,
         'новости': get_news,
+        'баш': get_bash,
+        'задолбали': get_zadolbali,
+        'ithappens': get_ithappens,
         'игра': start_game
     },
     'admin': {
