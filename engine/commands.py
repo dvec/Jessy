@@ -2,7 +2,7 @@ import time
 import random
 
 from api import api
-from . import functions
+from . import advanced
 
 
 def set_chat_name(**kwargs):
@@ -18,20 +18,26 @@ def set_chat_name(**kwargs):
         return 'Вы не в беседе!'
 
 
+def update_cache(lines=None, **kwargs):
+    del kwargs
+    if lines is None:
+        advanced.answers_cache = advanced.parse_data('data/bot_data/answers')
+    else:
+        advanced.answers_cache = [line.split('\\') for line in lines]
+    return 'ok'
+
+
 def add_to_database(**kwargs):
     message = kwargs['message']
     data = [j.strip() for j in [i for i in ''.join(message).split('—')] if j.strip() != '']
     if len(data) == 2:
         (message, answer) = data
-        message = functions.to_simple_text(message).lower()
+        message = advanced.to_simple_text(message).lower()
     else:
         return 'Неверное кол-во параметров!'
     del data
-
+    file_lines = ['\\'.join(line) + '\n' for line in advanced.answers_cache]
     with open('data/bot_data/answers', 'r+') as file:
-        file_lines = file.readlines()
-    with open('data/bot_data/answers', 'r+') as file:
-
         for line_id in range(len(file_lines)):
             line = file_lines[line_id].strip().split('\\')
             if line[0] == message:
@@ -40,18 +46,19 @@ def add_to_database(**kwargs):
                         return 'Вы не можете научить бота такой реплике'
                     file_lines[line_id] = file_lines[line_id].strip() + '\\' + answer + '\n'
                     file.writelines(file_lines)
+                    update_cache(lines=file_lines)
                     return 'Вариант сообщения добавлен'
                 else:
                     return 'Я уже знаю такую реплику'
 
         file_lines.append(message + '\\' + answer + '\n')
-
         file.writelines(file_lines)
+        update_cache(lines=file_lines)
         return 'Сообщение добавлено'
 
 
 def choose_random_user(**kwargs):
-    message = functions.to_simple_text(kwargs['message']).split(' ')
+    message = advanced.to_simple_text(kwargs['message']).split(' ')
     chat_id = kwargs['chat_id']
     to_replace = {
         'я': 'вы',
@@ -64,7 +71,7 @@ def choose_random_user(**kwargs):
     message = ' '.join(message)
     if chat_id is not None:
         users = kwargs['vk_request'].messages.getChatUsers(chat_id=chat_id, fields=['nickname'])
-        user_id = functions.get_random_num(message) % len(users)
+        user_id = advanced.get_random_num(message) % len(users)
         handle = 'это' if not message else message
         return 'Я думаю, что {} {} {}'.format(handle, users[user_id]['first_name'], users[user_id]['last_name'])
     else:
@@ -83,11 +90,9 @@ def get_state(**kwargs):
         110.0 < ping <= 130: '&#128551;',
         130.0 < ping: '&#128565;'
     }
-    with open('data/bot_data/answers', 'r') as file:
-        database_length = len(file.readlines())
-        return 'Статус соединения с api.vk.com: ' + smiley[True] + \
-               '\nЗаписей в базе данных: ' + str(database_length) + \
-               '\nОбработка этого сообщения заняла ' + str(time.time() - start_time)[:5] + ' сек'
+    return 'Статус соединения с api.vk.com: ' + smiley[True] + \
+           '\nЗаписей в базе данных: ' + str(len(advanced.answers_cache)) + \
+           '\nОбработка этого сообщения заняла ' + str(time.time() - start_time)[:5] + ' сек'
 
 
 def get_news(**kwargs):
@@ -99,19 +104,19 @@ def get_news(**kwargs):
 def get_bash(**kwargs):
     del kwargs
     with open('data/commands_data/bash') as file:
-        return random.choice(file.read().split('\\end\\'))[:2000]
+        return random.choice(file.read().split('\\end\\'))[:4095]
 
 
 def get_ithappens(**kwargs):
     del kwargs
     with open('data/commands_data/ithappens') as file:
-        return random.choice(file.read().split('\\end\\'))[:2000]
+        return random.choice(file.read().split('\\end\\'))[:4095]
 
 
 def get_zadolbali(**kwargs):
     del kwargs
     with open('data/commands_data/zadolbali') as file:
-        return random.choice(file.read().split('\\end\\'))[:2000]
+        return random.choice(file.read().split('\\end\\'))[:4095]
 
 
 def get_inf(**kwargs):
@@ -126,7 +131,7 @@ def get_inf(**kwargs):
         message[i] = text_to_replace if text_to_replace is not None else message[i]
 
     message = list(' '.join(message).strip())
-    return ''.join(message) + ' с вероятностью ' + str(functions.get_random_num(message) % 100) + '%'
+    return ''.join(message) + ' с вероятностью ' + str(advanced.get_random_num(message) % 100) + '%'
 
 
 def get_help(**kwargs):
@@ -142,6 +147,7 @@ def add_to_chat(**kwargs):
 def start_game(**kwargs):
     del kwargs
     return 'В разработке'
+
 
 commands = {
     'normal': {
@@ -159,7 +165,8 @@ commands = {
         'игра': start_game
     },
     'admin': {
-        'del': functions.delete_user,
-        'make': functions.set_user_mode
+        'del': advanced.delete_user,
+        'make': advanced.set_user_mode,
+        'reload': update_cache
     }
 }

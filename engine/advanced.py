@@ -8,10 +8,9 @@ def get_random_num(text):
 
 def to_simple_text(text, ban_symbols=None):
     if ban_symbols is None:
-        ban_symbols = ['?', '!', '(', ')', '0', '9', ':', '.', '|']
-    text = list(''.join(text).strip())
-    while len(text) != 0 and text[len(text) - 1] in ban_symbols:
-        text = text[:len(text) - 1]
+        ban_symbols = ['?', '!', '(', ')', '0', '9', ':', '.', ',', '|', ' ']
+    while len(text) != 0 and text[-1] in ban_symbols:
+        text = text[:-1]
     return ''.join(text)
 
 
@@ -47,3 +46,12 @@ def get_user_mode(**kwargs):
             if user[0] == user_id:
                 return ':'.join(user[1:])
     return 'normal'
+
+
+def parse_data(path, **kwargs):
+    del kwargs
+    with open(path) as data:
+        return [line.split('\\') for line in data.read().splitlines()]
+
+
+answers_cache = parse_data('data/bot_data/answers')

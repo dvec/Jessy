@@ -1,5 +1,5 @@
 from unittest import TestCase
-from engine import functions
+from engine import advanced
 
 
 class TestFunctions(TestCase):
@@ -11,7 +11,7 @@ class TestFunctions(TestCase):
             ('!@#$%^&*()_+|\\/"][}{', '!&(*@#&!)*')
         )
         for test1, test2 in tests:
-            self.assertNotEquals(functions.get_random_num(test1), functions.get_random_num(test2))
+            self.assertNotEquals(advanced.get_random_num(test1), advanced.get_random_num(test2))
 
     def test_to_simple_text(self):
         tests = (
@@ -21,4 +21,4 @@ class TestFunctions(TestCase):
             ('JuSt A tEsT', 'just a test')
         )
         for test1, test2 in tests:
-            self.assertEquals(functions.to_simple_text(test1), functions.to_simple_text(test2))
+            self.assertEquals(advanced.to_simple_text(test1), advanced.to_simple_text(test2))
