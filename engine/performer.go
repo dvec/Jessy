@@ -7,6 +7,7 @@ import (
 	"main/engine/commands"
 	"log"
 	"main/engine/cache"
+	"math/rand"
 )
 
 type function struct {
@@ -14,8 +15,33 @@ type function struct {
 	function 	func(commands.FuncArgs)
 }
 
+func getAnswer(data map[string][]string, message string) string {
+	answer := data[message]
+	if len(answer) != 0 {
+		return answer[rand.Intn(len(answer))]
+	} else {
+		words := strings.Split(message, " ")
+		var sep string
+		if len(words) > 1 {
+			sep = " "
+		} else {
+			sep = ""
+		}
+		newMessage := strings.Join(words[:len(words) - 1], sep)
+		newData := map[string][]string{}
+		for request, answers := range data {
+			messageLen := len(newMessage)
+			if messageLen <= len(request) {
+				newData[request[:len(newMessage)]] = answers
+			}
+		}
+		return getAnswer(newData, newMessage)
+	}
+}
+
 func Perform(chanKit vk.ChanKit, message vk.Message, dataCache cache.DataCache) {
-	args := strings.Split(message.Text, " ")
+	text := strings.ToLower(strings.Trim(message.Text, "?!():.,|"))
+	args := strings.Split(text, " ")
 	firstWord := strings.ToLower(args[0])
 	for _, command := range getFunctions() {
 		if firstWord == command.name {
@@ -29,7 +55,7 @@ func Perform(chanKit vk.ChanKit, message vk.Message, dataCache cache.DataCache) 
 	log.Println("[INFO] No command detected. Running reiteration")
 	chanKit.MakeRequest("messages.send", map[string]string{
 		"user_id":	strconv.FormatInt(message.UserId, 10),
-		"message":	message.Text,
+		"message":	getAnswer(dataCache.DicionaryCache.Data, text),
 	})
 }
 

@@ -10,8 +10,13 @@ type lineCache struct {
 	path string
 }
 
-type dictCache struct {
+type mapCache struct {
 	Data map[string]string
+	path string
+}
+
+type dictCache struct {
+	Data map[string][]string
 	path string
 }
 
@@ -23,7 +28,7 @@ type DataCache struct {
 		Zadolbali lineCache
 	}
 	CommandDataCache struct{
-		Help dictCache
+		Help mapCache
 	}
 	DicionaryCache dictCache
 }
@@ -32,12 +37,22 @@ func (cache *lineCache) UpdateCache() {
 	 cache.Data = ParseFile(cache.path)
 }
 
-func (cache *dictCache) UpdateCache() {
+func (cache *mapCache) UpdateCache() {
 	data := ParseFile(cache.path)
 	newCache := map[string]string{}
 	for _, entry := range data {
 		entries := strings.Split(entry, "\\")
 		newCache[entries[0]] = entries[1]
+	}
+	cache.Data = newCache
+}
+
+func (cache *dictCache) UpdateCache() {
+	data := ParseFile(cache.path)
+	newCache := map[string][]string{}
+	for _, entry := range data {
+		entries := strings.Split(entry, "\\")
+		newCache[entries[0]] = entries[1:]
 	}
 	cache.Data = newCache
 }
