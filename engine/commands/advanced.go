@@ -2,6 +2,7 @@ package commands
 
 import (
 	"strconv"
+	"fmt"
 )
 
 
@@ -28,7 +29,7 @@ func getRandomNum(text string) int {
 	return out % 100
 }
 
-func parseData(args []string, filter []string) bool {
+func checkData(args []string, filter []string) bool {
 	if len(args) != len(filter) {
 		return false
 	}
@@ -46,4 +47,21 @@ func parseData(args []string, filter []string) bool {
 	}
 
 	return true
+}
+
+func getHelp(name string, cache map[string]string) string {
+	if name == "" {
+		var commandList string
+		for command := range cache {
+			commandList += fmt.Sprintf("&#128217;|%v \n", command)
+		}
+		return fmt.Sprintf("Список моих команд: \n%v" +
+			" Вы можете посмотреть справку по любой из них, набрав:" +
+			" \nпомощь [название команды]", commandList)
+	}
+	if cache[name] != "" {
+		return fmt.Sprintf("Справка по команде %v: %v", name, cache[name])
+	} else {
+		return "Нет справки по такой команде"
+	}
 }

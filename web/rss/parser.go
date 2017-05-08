@@ -40,8 +40,10 @@ func ParseRss(url string, args ...string) (out string) {
 		from = strings.Index(code, begin) + len(begin)
 		to = strings.Index(code, end)
 		if from == -1 || to == -1 { break }
-		out += code[from:to] + "\\end\\\n"
-		code = code[to + len(end):]
+		if from - to < 4000 {
+			out += code[from:to] + "\\end\\\n"
+			code = code[to+len(end):]
+		}
 	}
 
 	filter := []struct{
@@ -57,13 +59,12 @@ func ParseRss(url string, args ...string) (out string) {
 		{"<ol>", ""},		{"</ol>", ""},
 		{"<ul>", ""},		{"</ul>", ""},
 		{"<br>", "\n"},	{"<a href=", ""},
-		{"&lt;", "<"},		{"&gt;", ">"},
+		{"&lt;", "\""},		{"&gt;", "\""},
 		{"&quot;", "\""},	{">", " "},
 	}
 
 	for _, replacement := range filter {
 		out = strings.Replace(out, replacement.old, replacement.new, -1)
 	}
-
 	return
 }

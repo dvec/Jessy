@@ -6,7 +6,7 @@ import (
 )
 
 func Update()  {
-	log.Print("Start updating files")
+	log.Print("[INFO] Start updating files")
 	patches := map[string][2]string{
 		"news": {"data/rss/news.dat", "http://lenta.ru/rss"},
 		"bash": {"data/rss/bash.dat", "http://bash.im/rss/"},
@@ -17,9 +17,9 @@ func Update()  {
 		bytes := []byte(ParseRss(value[1]))
 		fileWriteErr := ioutil.WriteFile(value[0], bytes, 0644)
 		if fileWriteErr != nil {
-			log.Print("Failed to write to file: ", fileWriteErr)
+			log.Print("[ERROR] [main::web::rss::updater.go] Failed to write to file: ", fileWriteErr)
 		} else {
-			log.Print("Successfully updated ", value[0])
+			log.Print("[INFO] Successfully updated ", value[0])
 		}
 	}
 }

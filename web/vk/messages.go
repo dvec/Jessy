@@ -26,25 +26,32 @@ func (chanKit ChanKit)MakeRequest(name string, params map[string]string) Answer 
 }
 
 type Message struct {
-	Id		int64
-	Date		int64
-	Out		int64
-	UserId		int64
-	Text 		string
-	Attachments	map[string]interface{}
+	Id          int64
+	Date        int64
+	Out         int64
+	UserId      int64
+	Text        string
+	Attachments map[string]interface{}
 }
 
 func GetNewMessages(chanKit ChanKit, messageChan chan<- Message) {
 	for {
-		chanKit.RequestChan <- Request{"messages.get", nil}
+		chanKit.RequestChan <- Request{"messages.get", map[string]string{
+			"time_offset": "1",
+		}}
 		answer := <- chanKit.AnswerChan
 		if answer.Error != nil {
-			log.Println("[ERROR] Messages::GetNewMessages:", answer.Error)
+			log.Println("[ERROR] [Messages::GetNewMessages]:", answer.Error)
+		}
+		if answer.Output["response"] == nil {
+			log.Println("[ERROR]	[Messages::GetNewMessages]: Nil answer")
+			continue
 		}
 		response := answer.Output["response"].([]interface{})
 		for _, currentMessage := range response[1:] {
 			parsedMessage := currentMessage.(map[string]interface{})
 			if parsedMessage["read_state"].(float64) == 0 {
+				log.Println("[INFO] Got new message:", parsedMessage)
 				var attachments map[string]interface{}
 				if parsedMessage["attachments"] != nil {
 					attachments = parsedMessage["attachments"].(map[string]interface{})
