@@ -63,24 +63,21 @@ func main() {
 	log.Print("[INFO] Initialization is complete. Output will be redirected to a log file")
 	log.SetOutput(logFile)
 	go vk.GetNewMessages(api.ChanKit, messageChan)
-	go func() {
-		for {
-			select {
-			case message := <- messageChan:
-				go engine.Perform(api.ChanKit, message, dataCache)
-			case request := <- api.ChanKit.RequestChan:
-				out, err := api.Request(request.Name, request.Params)
-				api.ChanKit.AnswerChan <- vk.Answer{out, err}
-				time.Sleep(time.Second / 3)
-			case <- time.After(time.Minute * 5):
-				log.Println("[INFO] Time to update RSS files")
-				go rss.Update()
-				//noinspection GoDeferInLoop
-				defer func() {
-					go dataCache.UpdateCache()
-				}()
-			}
+	for {
+		select {
+		case message := <- messageChan:
+			go engine.Perform(api.ChanKit, message, dataCache)
+		case request := <- api.ChanKit.RequestChan:
+			out, err := api.Request(request.Name, request.Params)
+			api.ChanKit.AnswerChan <- vk.Answer{out, err}
+			time.Sleep(time.Second / 3)
+		case <- time.After(time.Minute * 5):
+			log.Println("[INFO] Time to update RSS files")
+			go rss.Update()
+			//noinspection GoDeferInLoop
+			defer func() {
+				go dataCache.UpdateCache()
+			}()
 		}
-	}()
-	fmt.Scanln()
+	}
 }

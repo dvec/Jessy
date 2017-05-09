@@ -18,23 +18,6 @@ func TestParseData(t *testing.T) {
 	}
 }
 
-func TestToSimpleText(t *testing.T) {
-	tests := []struct {
-		text string
-		filter []string
-		expectedResult string
-	}{
-		{"First test!", []string{"!"}, "First test"},
-		{"Second test?!", []string{"!", "?"}, "Second test"},
-		{"Third test? Oh, no!", []string{"!"}, "Third test? Oh, no"},
-		{"...", []string{"."}, ""},
-	}
-	for _, test := range tests {
-		if toSimpleText(test.text, test.filter) != test.expectedResult {
-			t.Fail()
-		}
-	}
-}
 
 func TestGetRandomNum(t *testing.T) {
 	tests := []struct {

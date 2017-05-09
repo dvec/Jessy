@@ -30,7 +30,7 @@ type DataCache struct {
 	CommandDataCache struct{
 		Help mapCache
 	}
-	DicionaryCache dictCache
+	DictionaryCache dictCache
 }
 
 func (cache *lineCache) UpdateCache() {
@@ -63,7 +63,7 @@ func (cache *DataCache) InitCache() {
 	cache.RSSCache.IThappens.path = conf.RSS_DIR_PATH + "/ithappens.dat"
 	cache.RSSCache.Zadolbali.path = conf.RSS_DIR_PATH + "/zadolbali.dat"
 	cache.CommandDataCache.Help.path = conf.COMMANDS_DIR_PATH + "/help.dat"
-	cache.DicionaryCache.path = conf.DATA_DIR_PATH + "/dictionary.bin"
+	cache.DictionaryCache.path = conf.DATA_DIR_PATH + "/dictionary.bin"
 
 	cache.UpdateCache()
 }
@@ -74,5 +74,5 @@ func (cache *DataCache) UpdateCache() {
 	cache.RSSCache.IThappens.UpdateCache()
 	cache.RSSCache.Zadolbali.UpdateCache()
 	cache.CommandDataCache.Help.UpdateCache()
-	cache.DicionaryCache.UpdateCache()
+	cache.DictionaryCache.UpdateCache()
 }

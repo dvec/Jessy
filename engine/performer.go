@@ -39,6 +39,19 @@ func getAnswer(data map[string][]string, message string) string {
 	}
 }
 
+func getFunctions() []function {
+	commandsList := []function {
+		{"статус", commands.GetState},
+		{"помощь", commands.GetHelp},
+		{"инфа", commands.GetGen},
+		{"баш", commands.Bash},
+		{"айти", commands.IThappens},
+		{"задолбали", commands.Zadolbali},
+		{"новости", commands.News},
+	}
+	return commandsList
+}
+
 func Perform(chanKit vk.ChanKit, message vk.Message, dataCache cache.DataCache) {
 	text := strings.ToLower(strings.Trim(message.Text, "?!():.,|"))
 	args := strings.Split(text, " ")
@@ -51,22 +64,22 @@ func Perform(chanKit vk.ChanKit, message vk.Message, dataCache cache.DataCache) 
 			return
 		}
 	}
-
 	log.Println("[INFO] No command detected. Running reiteration")
-	chanKit.MakeRequest("messages.send", map[string]string{
-		"user_id":	strconv.FormatInt(message.UserId, 10),
-		"message":	getAnswer(dataCache.DicionaryCache.Data, text),
-	})
-}
-
-func getFunctions() []function {
-	commandsList := []function {
-		{"статус", commands.GetState},
-		{"помощь", commands.GetHelp},
-		{"напиши", commands.Print},
-		{"инфа", commands.GetGen},
-		{"баш", commands.Bash},
-		{"новости", commands.News},
+	answer := getAnswer(dataCache.DictionaryCache.Data, text)
+	params := map[string]string{
+		"user_id": strconv.FormatInt(message.UserId, 10),
 	}
-	return commandsList
+	attach := strings.Index(answer, "<attach>")
+	if attach != -1 {
+		attachEnd := strings.Index(answer, "<end>")
+		if attachEnd != -1 {
+			params["attachment"] = answer[attach + len("<attach>"):attachEnd]
+			params["messsage"] = answer[:attach]
+		} else {
+			params["message"] = "Internal error"
+		}
+	} else {
+		params["message"] = answer
+	}
+	chanKit.MakeRequest("messages.send", params)
 }

@@ -59,6 +59,7 @@ func GetNewMessages(chanKit ChanKit, messageChan chan<- Message) {
 				messageChan <- Message{
 					Date:        int64(parsedMessage["date"].(float64)),
 					Out:         int64(parsedMessage["out"].(float64)),
+					Id:          int64(parsedMessage["mid"].(float64)),
 					UserId:      int64(parsedMessage["uid"].(float64)),
 					Text:        parsedMessage["body"].(string),
 					Attachments: attachments,

@@ -8,6 +8,7 @@ import (
 	"main/web/vk"
 	"strings"
 	"main/engine/cache"
+	"fmt"
 )
 
 type FuncArgs struct {
@@ -20,16 +21,25 @@ type FuncArgs struct {
 func GetState(args FuncArgs) {
 	start := time.Now().UnixNano()
 	sort.Ints(rand.Perm(1000))
+	metering := strconv.FormatInt(time.Now().UnixNano() - start, 10)
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": strconv.FormatInt(time.Now().UnixNano() - start, 10),
+		"message": fmt.Sprintf("Я отсортировала массив из 1000 элементов за %v наносекунд", metering),
 	})
 }
 
 func GetGen(args FuncArgs) {
+	words := strings.Split(args.Message.Text, " ")
+	var message string
+	if checkData(words, []string{"s", "*"}) {
+		information := strconv.FormatInt(int64(getRandomNum(args.Message.Text)%100), 10)
+		message = fmt.Sprintf("С вероятностью %v%%", information)
+	} else {
+		message = getHelp("инфа", args.DataCache.CommandDataCache.Help.Data)
+	}
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": strconv.FormatInt(int64(getRandomNum(args.Message.Text)), 10),
+		"message": message,
 	})
 }
 
@@ -37,7 +47,7 @@ func GetHelp(args FuncArgs) {
 	words := strings.Split(args.Message.Text, " ")
 	var name string
 	if checkData(words, []string{"s", "s"}) {
-		name = words[1]
+		name = strings.Join(words[1:], " ")
 	} else {
 		name = ""
 	}
@@ -48,17 +58,24 @@ func GetHelp(args FuncArgs) {
 	})
 }
 
-func Print(args FuncArgs) {
-	args.ApiChan.MakeRequest("messages.send", map[string]string{
-		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": toSimpleText(args.Message.Text, []string{"\\", "|", "/"}),
-	})
-}
-
 func Bash(args FuncArgs) {
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
 		"message": args.DataCache.RSSCache.Bash.Data[rand.Intn(len(args.DataCache.RSSCache.Bash.Data) - 1)],
+	})
+}
+
+func IThappens(args FuncArgs) {
+	args.ApiChan.MakeRequest("messages.send", map[string]string{
+		"user_id": strconv.FormatInt(args.Message.UserId, 10),
+		"message": args.DataCache.RSSCache.IThappens.Data[rand.Intn(len(args.DataCache.RSSCache.IThappens.Data) - 1)],
+	})
+}
+
+func Zadolbali(args FuncArgs) {
+	args.ApiChan.MakeRequest("messages.send", map[string]string{
+		"user_id": strconv.FormatInt(args.Message.UserId, 10),
+		"message": args.DataCache.RSSCache.Zadolbali.Data[rand.Intn(len(args.DataCache.RSSCache.Zadolbali.Data) - 1)],
 	})
 }
 

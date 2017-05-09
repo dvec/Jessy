@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"golang.org/x/net/html/charset"
 	"log"
+	"main/conf"
 )
 
 func check(err error) {
@@ -40,10 +41,10 @@ func ParseRss(url string, args ...string) (out string) {
 		from = strings.Index(code, begin) + len(begin)
 		to = strings.Index(code, end)
 		if from == -1 || to == -1 { break }
-		if from - to < 4000 {
+		if to - from < conf.MAX_MESSAGE_LEN {
 			out += code[from:to] + "\\end\\\n"
-			code = code[to+len(end):]
 		}
+		code = code[to+len(end):]
 	}
 
 	filter := []struct{
