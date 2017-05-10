@@ -2,7 +2,11 @@ package vk
 
 import (
 	"log"
-	"time"
+	"net/http"
+	"fmt"
+	"main/conf"
+	"io/ioutil"
+	"encoding/json"
 )
 
 type Request struct {
@@ -27,45 +31,88 @@ func (chanKit ChanKit)MakeRequest(name string, params map[string]string) Answer 
 
 type Message struct {
 	Id          int64
-	Date        int64
-	Out         int64
 	UserId      int64
 	Text        string
 	Attachments map[string]interface{}
 }
 
-func GetNewMessages(chanKit ChanKit, messageChan chan<- Message) {
+type LongPoll struct {
+	key	string
+	server	string
+	ts	int64
+}
+
+func (lp *LongPoll) Init(chanKit ChanKit) {
+	answer := chanKit.MakeRequest("messages.getLongPollServer", nil)
+	if answer.Error != nil {
+		log.Println("[ERROR] [Messages::init]:", answer.Error)
+	}
+	if answer.Output["response"] == nil {
+		log.Println("[ERROR]	[Messages::init]: Nil answer")
+	}
+	response := answer.Output["response"].(map[string]interface{})
+	lp.key = response["key"].(string)
+	lp.server = response["server"].(string)
+	lp.ts = int64(response["ts"].(float64))
+}
+
+func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 	for {
-		chanKit.RequestChan <- Request{"messages.get", map[string]string{
-			"time_offset": "1",
-		}}
-		answer := <- chanKit.AnswerChan
-		if answer.Error != nil {
-			log.Println("[ERROR] [Messages::GetNewMessages]:", answer.Error)
+		resp, err := http.Get(fmt.Sprintf("https://%v?act=a_check&key=%v&ts=%v&wait=%v&mode=2&version=1", lp.server, lp.key, lp.ts, conf.TIMEOUT))
+		if err != nil {
+			log.Println("[ERROR] [Messages::Go]: failed to get response: ", err)
 		}
-		if answer.Output["response"] == nil {
-			log.Println("[ERROR]	[Messages::GetNewMessages]: Nil answer")
-			continue
+		//noinspection GoDeferInLoop
+		defer resp.Body.Close()
+		data, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Println("[ERROR] [Messages::Go]: failed to read data: ", err)
 		}
-		response := answer.Output["response"].([]interface{})
-		for _, currentMessage := range response[1:] {
-			parsedMessage := currentMessage.(map[string]interface{})
-			if parsedMessage["read_state"].(float64) == 0 {
-				log.Println("[INFO] Got new message:", parsedMessage)
-				var attachments map[string]interface{}
-				if parsedMessage["attachments"] != nil {
-					attachments = parsedMessage["attachments"].(map[string]interface{})
-				}
-				messageChan <- Message{
-					Date:        int64(parsedMessage["date"].(float64)),
-					Out:         int64(parsedMessage["out"].(float64)),
-					Id:          int64(parsedMessage["mid"].(float64)),
-					UserId:      int64(parsedMessage["uid"].(float64)),
-					Text:        parsedMessage["body"].(string),
-					Attachments: attachments,
+		var response map[string]interface{}
+		if err := json.Unmarshal(data, &response); err != nil {
+			log.Println("[ERROR] [Messages::Go]: failed to parse data: ", err)
+		}
+		if response["failed"] != nil {
+			switch response["failed"].(float64) {
+			case 2 | 3:
+				lp.Init(chanKit)
+			case 4:
+				log.Println("[ERROR] [Messages::Go]: version param error")
+			}
+		}
+		type jsonBody struct {
+			Failed  int64           `json:"failed"`
+			Ts      int64           `json:"ts"`
+			Updates [][]interface{} `json:"updates"`
+		}
+
+		var body jsonBody
+
+		if err := json.Unmarshal(data, &body); err != nil {
+			log.Println("[Error] longPoll::process:", err.Error(), "WebResponse:", string(data))
+			return
+		}
+		for _, update := range body.Updates {
+			updateID := update[0].(float64)
+			switch updateID {
+			//TODO ADD NEW CASES
+			case 4: //New message action
+				label := update[2].(float64)
+				if label == 17 {
+					//If message from user 1 (Message not read) + 16 (Message sent via chat) = 17
+					message := new(Message)
+					message.Id = int64(update[1].(float64))
+					message.UserId = int64(update[3].(float64))
+					message.Text = update[6].(string)
+					message.Attachments = make(map[string]interface{})
+
+					for key, value := range update[7].(map[string]interface{}) {
+						message.Attachments[key] = value.(string)
+					}
+					messageChan <- *message
 				}
 			}
 		}
-		time.Sleep(time.Second / 3)
+		lp.ts = body.Ts
 	}
 }

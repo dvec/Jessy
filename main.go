@@ -46,6 +46,7 @@ func main() {
 	if fileOpenError != nil {
 		log.Print("[ERROR] [main::main()] Failed to open log file: ", fileOpenError)
 	}
+	log.SetOutput(logFile)
 	log.Println("[INFO] Updating RSS files...")
 	rss.Update()
 
@@ -59,10 +60,13 @@ func main() {
 
 	log.Println("[INFO] Initializating cache...")
 	dataCache.InitCache()
+	var lp vk.LongPoll
 
-	log.Print("[INFO] Initialization is complete. Output will be redirected to a log file")
-	log.SetOutput(logFile)
-	go vk.GetNewMessages(api.ChanKit, messageChan)
+	go func() {
+		lp.Init(api.ChanKit)
+		lp.Go(api.ChanKit, messageChan)
+	}()
+
 	for {
 		select {
 		case message := <- messageChan:
@@ -71,7 +75,7 @@ func main() {
 			out, err := api.Request(request.Name, request.Params)
 			api.ChanKit.AnswerChan <- vk.Answer{out, err}
 			time.Sleep(time.Second / 3)
-		case <- time.After(time.Minute * 5):
+		case <- time.After(time.Hour):
 			log.Println("[INFO] Time to update RSS files")
 			go rss.Update()
 			//noinspection GoDeferInLoop
