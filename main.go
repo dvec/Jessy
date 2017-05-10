@@ -42,11 +42,12 @@ func main() {
 			log.Print("[INFO] ", file.path, " has been created")
 		}
 	}
+	/*
 	logFile, fileOpenError := os.OpenFile(logFilePath, os.O_RDWR, conf.DATA_FILE_PERMISSION)
 	if fileOpenError != nil {
 		log.Print("[ERROR] [main::main()] Failed to open log file: ", fileOpenError)
 	}
-	log.SetOutput(logFile)
+	log.SetOutput(logFile)*/
 	log.Println("[INFO] Updating RSS files...")
 	rss.Update()
 
@@ -70,6 +71,7 @@ func main() {
 	for {
 		select {
 		case message := <- messageChan:
+			log.Println("[INFO] New message detected: ", message)
 			go engine.Perform(api.ChanKit, message, dataCache)
 		case request := <- api.ChanKit.RequestChan:
 			out, err := api.Request(request.Name, request.Params)
@@ -77,10 +79,11 @@ func main() {
 			time.Sleep(time.Second / 3)
 		case <- time.After(time.Hour):
 			log.Println("[INFO] Time to update RSS files")
-			go rss.Update()
-			//noinspection GoDeferInLoop
-			defer func() {
-				go dataCache.UpdateCache()
+			go func() {
+				rss.Update()
+				defer func() {
+					go dataCache.UpdateCache()
+				}()
 			}()
 		}
 	}

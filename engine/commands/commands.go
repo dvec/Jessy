@@ -35,7 +35,7 @@ func GetGen(args FuncArgs) {
 		information := strconv.FormatInt(int64(getRandomNum(args.Message.Text)%100), 10)
 		message = fmt.Sprintf("С вероятностью %v%%", information)
 	} else {
-		message = getHelp("инфа", args.DataCache.CommandDataCache.Help.Data)
+		message = getHelp("инфа", args.DataCache.CommandDataCache.Help)
 	}
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
@@ -51,7 +51,7 @@ func GetHelp(args FuncArgs) {
 	} else {
 		name = ""
 	}
-	message := getHelp(name, args.DataCache.CommandDataCache.Help.Data)
+	message := getHelp(name, args.DataCache.CommandDataCache.Help)
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
 		"message": message,

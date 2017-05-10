@@ -57,40 +57,32 @@ func (lp *LongPoll) Init(chanKit ChanKit) {
 }
 
 func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
-	for {
-		resp, err := http.Get(fmt.Sprintf("https://%v?act=a_check&key=%v&ts=%v&wait=%v&mode=2&version=1", lp.server, lp.key, lp.ts, conf.TIMEOUT))
-		if err != nil {
-			log.Println("[ERROR] [Messages::Go]: failed to get response: ", err)
-		}
-		//noinspection GoDeferInLoop
-		defer resp.Body.Close()
-		data, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Println("[ERROR] [Messages::Go]: failed to read data: ", err)
-		}
-		var response map[string]interface{}
-		if err := json.Unmarshal(data, &response); err != nil {
-			log.Println("[ERROR] [Messages::Go]: failed to parse data: ", err)
-		}
-		if response["failed"] != nil {
-			switch response["failed"].(float64) {
-			case 2 | 3:
-				lp.Init(chanKit)
-			case 4:
-				log.Println("[ERROR] [Messages::Go]: version param error")
-			}
-		}
+	resp, err := http.Get(fmt.Sprintf("https://%v?act=a_check&key=%v&ts=%v&wait=%v&mode=2&version=1", lp.server, lp.key, lp.ts, conf.TIMEOUT))
+	if err != nil {
+		log.Println("[ERROR] [Messages::Go]: failed to get response: ", err)
+	}
+
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("[ERROR] [Messages::Go]: failed to read data: ", err)
+	}
+	var response map[string]interface{}
+	if err := json.Unmarshal(data, &response); err != nil {
+		log.Println("[ERROR] [Messages::Go]: failed to parse data: ", err)
+	}
+	if response["failed"] != nil {
+		log.Println("[INFO] Reinitializating chanKit...")
+		lp.Init(chanKit)
+	} else {
 		type jsonBody struct {
 			Failed  int64           `json:"failed"`
 			Ts      int64           `json:"ts"`
 			Updates [][]interface{} `json:"updates"`
 		}
-
 		var body jsonBody
-
 		if err := json.Unmarshal(data, &body); err != nil {
 			log.Println("[Error] longPoll::process:", err.Error(), "WebResponse:", string(data))
-			return
 		}
 		for _, update := range body.Updates {
 			updateID := update[0].(float64)
@@ -105,7 +97,6 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 					message.UserId = int64(update[3].(float64))
 					message.Text = update[6].(string)
 					message.Attachments = make(map[string]interface{})
-
 					for key, value := range update[7].(map[string]interface{}) {
 						message.Attachments[key] = value.(string)
 					}
@@ -115,4 +106,5 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 		}
 		lp.ts = body.Ts
 	}
+	lp.Go(chanKit, messageChan)
 }

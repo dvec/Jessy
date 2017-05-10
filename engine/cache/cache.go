@@ -3,58 +3,68 @@ package cache
 import (
 	"strings"
 	"main/conf"
+	"sync"
 )
 
-type lineCache struct {
+type LineCache struct {
+	sync.Mutex
 	Data []string
 	path string
 }
 
-type mapCache struct {
+type MapCache struct {
+	sync.Mutex
 	Data map[string]string
 	path string
 }
 
-type dictCache struct {
+type DictCache struct {
+	sync.Mutex
 	Data map[string][]string
 	path string
 }
 
 type DataCache struct {
 	RSSCache struct{
-		News      lineCache
-		Bash      lineCache
-		IThappens lineCache
-		Zadolbali lineCache
+		News      LineCache
+		Bash      LineCache
+		IThappens LineCache
+		Zadolbali LineCache
 	}
 	CommandDataCache struct{
-		Help mapCache
+		Help MapCache
 	}
-	DictionaryCache dictCache
+	DictionaryCache DictCache
 }
 
-func (cache *lineCache) UpdateCache() {
-	 cache.Data = ParseFile(cache.path)
+func (cache *LineCache) UpdateCache() {
+	cache.Lock()
+	cache.Data = ParseFile(cache.path)
+	cache.Unlock()
 }
 
-func (cache *mapCache) UpdateCache() {
+func (cache *MapCache) UpdateCache() {
 	data := ParseFile(cache.path)
 	newCache := map[string]string{}
 	for _, entry := range data {
 		entries := strings.Split(entry, "\\")
 		newCache[entries[0]] = entries[1]
 	}
+	cache.Lock()
 	cache.Data = newCache
+	cache.Unlock()
 }
 
-func (cache *dictCache) UpdateCache() {
+func (cache *DictCache) UpdateCache() {
 	data := ParseFile(cache.path)
 	newCache := map[string][]string{}
 	for _, entry := range data {
 		entries := strings.Split(entry, "\\")
 		newCache[entries[0]] = entries[1:]
 	}
+	cache.Lock()
 	cache.Data = newCache
+	cache.Unlock()
 }
 
 func (cache *DataCache) InitCache() {
@@ -70,7 +80,7 @@ func (cache *DataCache) InitCache() {
 
 func (cache *DataCache) UpdateCache() {
 	cache.RSSCache.News.UpdateCache()
-	cache.RSSCache.Bash.UpdateCache()
+	cache.RSSCache.Bash.Lock()
 	cache.RSSCache.IThappens.UpdateCache()
 	cache.RSSCache.Zadolbali.UpdateCache()
 	cache.CommandDataCache.Help.UpdateCache()

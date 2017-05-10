@@ -65,7 +65,9 @@ func Perform(chanKit vk.ChanKit, message vk.Message, dataCache cache.DataCache) 
 		}
 	}
 	log.Println("[INFO] No command detected. Running reiteration")
+	dataCache.DictionaryCache.Lock()
 	answer := getAnswer(dataCache.DictionaryCache.Data, text)
+	dataCache.DictionaryCache.Unlock()
 	params := map[string]string{
 		"user_id": strconv.FormatInt(message.UserId, 10),
 	}
