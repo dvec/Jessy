@@ -67,7 +67,6 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 		log.Println("[ERROR] [Messages::Go]: failed to get response: ", err)
 	}
 
-	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("[ERROR] [Messages::Go]: failed to read data: ", err)
@@ -111,5 +110,6 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 		}
 		lp.ts = body.Ts
 	}
+	resp.Body.Close() //I can't move it in defer because this function never ends. Sorry me for bad code. Hold on. We are with you
 	lp.Go(chanKit, messageChan)
 }

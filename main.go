@@ -42,12 +42,15 @@ func main() {
 			log.Print("[INFO] ", file.path, " has been created")
 		}
 	}
-	/*
+
+	log.Println("[INFO] Output will be redirected to a log file.")
 	logFile, fileOpenError := os.OpenFile(logFilePath, os.O_RDWR, conf.DATA_FILE_PERMISSION)
 	if fileOpenError != nil {
 		log.Print("[ERROR] [main::main()] Failed to open log file: ", fileOpenError)
 	}
-	log.SetOutput(logFile)*/
+
+	log.SetOutput(logFile)
+
 	log.Println("[INFO] Updating RSS files...")
 	rss.Update()
 
