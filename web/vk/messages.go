@@ -42,6 +42,11 @@ type LongPoll struct {
 	ts	int64
 }
 
+const (
+	UNREAD = 1
+	CHAT = 16
+)
+
 func (lp *LongPoll) Init(chanKit ChanKit) {
 	answer := chanKit.MakeRequest("messages.getLongPollServer", nil)
 	if answer.Error != nil {
@@ -90,7 +95,7 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 			//TODO ADD NEW CASES
 			case 4: //New message action
 				label := update[2].(float64)
-				if label == 17 {
+				if label == UNREAD || label == UNREAD + CHAT {
 					//If message from user 1 (Message not read) + 16 (Message sent via chat) = 17
 					message := new(Message)
 					message.Id = int64(update[1].(float64))
