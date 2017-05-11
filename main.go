@@ -68,7 +68,9 @@ func main() {
 
 	go func() {
 		lp.Init(api.ChanKit)
-		lp.Go(api.ChanKit, messageChan)
+		for {
+			lp.Go(api.ChanKit, messageChan)
+		}
 	}()
 
 	for {

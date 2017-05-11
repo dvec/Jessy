@@ -15,5 +15,10 @@ func ParseFile(path string) []string {
 	for index, recording := range data {
 		data[index] = strings.Trim(recording, "\n ")
 	}
-	return data[:len(data) - 1]
+	if len(data) >= 2 {
+		return data[:len(data)-1]
+	} else {
+		log.Println("[ERROR] [main::engine::cache::tools.go::ParseFile()] Bad data")
+		return []string{"Error"}
+	}
 }

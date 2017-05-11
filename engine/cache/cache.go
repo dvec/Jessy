@@ -80,7 +80,7 @@ func (cache *DataCache) InitCache() {
 
 func (cache *DataCache) UpdateCache() {
 	cache.RSSCache.News.UpdateCache()
-	cache.RSSCache.Bash.Lock()
+	cache.RSSCache.Bash.UpdateCache()
 	cache.RSSCache.IThappens.UpdateCache()
 	cache.RSSCache.Zadolbali.UpdateCache()
 	cache.CommandDataCache.Help.UpdateCache()

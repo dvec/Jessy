@@ -66,6 +66,7 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 	if err != nil {
 		log.Println("[ERROR] [Messages::Go]: failed to get response: ", err)
 	}
+	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -94,8 +95,8 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 			//TODO ADD NEW CASES
 			case 4: //New message action
 				label := update[2].(float64)
-				if label == UNREAD || label == UNREAD + CHAT {
-					//If message from user 1 (Message not read) + 16 (Message sent via chat) = 17
+				if label == UNREAD || label == UNREAD+CHAT {
+					//If message 1 (Message not read) + 16 (Message sent via chat) = 17
 					message := new(Message)
 					message.Id = int64(update[1].(float64))
 					message.UserId = int64(update[3].(float64))
@@ -110,6 +111,4 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 		}
 		lp.ts = body.Ts
 	}
-	resp.Body.Close() //I can't move it in defer because this function never ends. Sorry me for bad code. Hold on. We are with you
-	lp.Go(chanKit, messageChan)
 }
