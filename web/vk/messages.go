@@ -65,16 +65,19 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 	resp, err := http.Get(fmt.Sprintf("https://%v?act=a_check&key=%v&ts=%v&wait=%v&mode=2&version=1", lp.server, lp.key, lp.ts, conf.TIMEOUT))
 	if err != nil {
 		log.Println("[ERROR] [Messages::Go]: failed to get response: ", err)
+		return
 	}
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("[ERROR] [Messages::Go]: failed to read data: ", err)
+		return
 	}
 	var response map[string]interface{}
 	if err := json.Unmarshal(data, &response); err != nil {
 		log.Println("[ERROR] [Messages::Go]: failed to parse data: ", err)
+		return
 	}
 	if response["failed"] != nil {
 		log.Println("[INFO] Reinitializating chanKit...")
@@ -88,6 +91,7 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 		var body jsonBody
 		if err := json.Unmarshal(data, &body); err != nil {
 			log.Println("[Error] longPoll::process:", err.Error(), "WebResponse:", string(data))
+			return
 		}
 		for _, update := range body.Updates {
 			updateID := update[0].(float64)
