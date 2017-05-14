@@ -62,7 +62,7 @@ func (lp *LongPoll) Init(chanKit ChanKit) {
 }
 
 func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
-	resp, err := http.Get(fmt.Sprintf("https://%v?act=a_check&key=%v&ts=%v&wait=%v&mode=2&version=1", lp.server, lp.key, lp.ts, conf.TIMEOUT))
+	resp, err := http.Get(fmt.Sprintf("https://%v?act=a_check&key=%v&ts=%v&wait=%v&mode=2&version=1", lp.server, lp.key, lp.ts, conf.VK_TIMEOUT))
 	if err != nil {
 		log.Println("[ERROR] [Messages::Go]: failed to get response: ", err)
 		return
@@ -99,7 +99,7 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 			//TODO ADD NEW CASES
 			case 4: //New message action
 				label := update[2].(float64)
-				if label == UNREAD || label == UNREAD+CHAT {
+				if label == UNREAD || label == UNREAD + CHAT {
 					//If message 1 (Message not read) + 16 (Message sent via chat) = 17
 					message := new(Message)
 					message.Id = int64(update[1].(float64))

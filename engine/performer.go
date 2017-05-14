@@ -7,36 +7,11 @@ import (
 	"main/engine/commands"
 	"log"
 	"main/engine/cache"
-	"math/rand"
 )
 
 type function struct {
 	name 		string
 	function 	func(commands.FuncArgs)
-}
-
-func getAnswer(data map[string][]string, message string) string {
-	answer := data[message]
-	if len(answer) != 0 {
-		return answer[rand.Intn(len(answer))]
-	} else {
-		words := strings.Split(message, " ")
-		var sep string
-		if len(words) > 1 {
-			sep = " "
-		} else {
-			sep = ""
-		}
-		newMessage := strings.Join(words[:len(words) - 1], sep)
-		newData := map[string][]string{}
-		for request, answers := range data {
-			messageLen := len(newMessage)
-			if messageLen <= len(request) {
-				newData[request[:len(newMessage)]] = answers
-			}
-		}
-		return getAnswer(newData, newMessage)
-	}
 }
 
 func getFunctions() []function {
@@ -66,14 +41,18 @@ func Perform(chanKit vk.ChanKit, message vk.Message, dataCache cache.DataCache) 
 	}
 	log.Println("[INFO] No command detected. Running reiteration")
 	dataCache.DictionaryCache.Lock()
-	answer := getAnswer(dataCache.DictionaryCache.Data, text)
+	answer, err := dataCache.DictionaryCache.Data.Respond(strings.ToLower(text))
 	dataCache.DictionaryCache.Unlock()
+	if err != nil {
+		log.Println("[ERROR] [main::engine::performer.go] Failed to get answer: ", err)
+	}
+
 	params := map[string]string{
 		"user_id": strconv.FormatInt(message.UserId, 10),
 	}
 	attach := strings.Index(answer, "<attach>")
 	if attach != -1 {
-		attachEnd := strings.Index(answer, "<end>")
+		attachEnd := strings.Index(answer, "</attach>")
 		if attachEnd != -1 {
 			params["attachment"] = answer[attach + len("<attach>"):attachEnd]
 			params["messsage"] = answer[:attach]

@@ -19,11 +19,11 @@ type Api struct {
 
 func (vk *Api) Request(methodName string, params map[string]string) (map[string]interface{}, error) {
 	body := url.Values{}
-	body.Set("access_token", conf.TOKEN)
+	body.Set("access_token", conf.VK_TOKEN)
 	for paramName, param := range params {
-		body.Add(paramName, param)
+		body.Set(paramName, param)
 	}
-	u, _ := url.ParseRequestURI(conf.API_URL)
+	u, _ := url.ParseRequestURI(conf.VK_API_URL)
 	u.Path = "/method/" + methodName
 	urlStr := fmt.Sprintf("%v", u)
 

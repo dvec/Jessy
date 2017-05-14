@@ -3,7 +3,7 @@ package commands
 import (
 	"strconv"
 	"fmt"
-	"main/engine/cache"
+	"main/engine/cache/cachetypes"
 )
 
 
@@ -37,13 +37,13 @@ func checkData(args []string, filter []string) bool {
 	return true
 }
 
-func getHelp(name string, cache cache.MapCache) string {
+func getHelp(name string, cache cachetypes.HelpCache) string {
 	if name == "" {
 		var commandList string
 		cache.Lock()
 		defer cache.Unlock()
-		for command := range cache.Data {
-			commandList += fmt.Sprintf("&#128217;|%v \n", command)
+		for _, command := range cache.Data.HelpList {
+			commandList += fmt.Sprintf("&#128217;|%v \n", command.Name)
 		}
 		return fmt.Sprintf("Список моих команд: \n%v" +
 			" Вы можете посмотреть справку по любой из них, набрав:" +
@@ -51,11 +51,18 @@ func getHelp(name string, cache cache.MapCache) string {
 	}
 	cache.Lock()
 	defer cache.Unlock()
-	if cache.Data[name] != "" {
-		return fmt.Sprintf("Справка по команде: \n" +
-			"\"%v\": %v", name, cache.Data[name])
-	} else {
-		fmt.Println(name)
-		return "Нет справки по такой команде"
+	for _, command := range cache.Data.HelpList {
+		if command.Name == name {
+			samples := ""
+			if command.Samples != nil {
+				samples = "Примеры использования: \n"
+				for _, sample := range command.Samples {
+					samples += fmt.Sprintf("USER> %v\nJESSY> %v", sample.Body, sample.Out)
+				}
+			}
+			return fmt.Sprintf("Справка по команде "+
+				"\"%v\": %v %v", name, command.Description, samples)
+		}
 	}
+	return "Нет справки по такой команде"
 }

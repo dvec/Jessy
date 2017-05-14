@@ -61,21 +61,21 @@ func GetHelp(args FuncArgs) {
 func Bash(args FuncArgs) {
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": args.DataCache.RSSCache.Bash.Data[rand.Intn(len(args.DataCache.RSSCache.Bash.Data) - 1)],
+		"message": args.DataCache.RSSCache.Bash.ChooseRandom(),
 	})
 }
 
 func IThappens(args FuncArgs) {
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": args.DataCache.RSSCache.IThappens.Data[rand.Intn(len(args.DataCache.RSSCache.IThappens.Data) - 1)],
+		"message": args.DataCache.RSSCache.IThappens.ChooseRandom(),
 	})
 }
 
 func Zadolbali(args FuncArgs) {
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": args.DataCache.RSSCache.Zadolbali.Data[rand.Intn(len(args.DataCache.RSSCache.Zadolbali.Data) - 1)],
+		"message": args.DataCache.RSSCache.Zadolbali.ChooseRandom(),
 	})
 }
 

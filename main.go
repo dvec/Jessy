@@ -9,6 +9,7 @@ import ("os"
 	"main/web/rss"
 	"main/engine"
 	"main/engine/cache"
+//	"main/web/speech"
 )
 
 func main() {
@@ -19,16 +20,11 @@ func main() {
 		isDir bool
 	}{
 		{conf.DATA_DIR_PATH, true},
-		{conf.DATA_DIR_PATH + "/dictionary.bin", false},
-		{conf.RSS_DIR_PATH, true},
-		{conf.RSS_DIR_PATH + "/bash.dat", false},
-		{conf.RSS_DIR_PATH + "/news.dat", false},
-		{conf.RSS_DIR_PATH + "/ithappens.dat", false},
-		{conf.RSS_DIR_PATH + "/zadolbali.dat", false},
+		{conf.DATA_DIR_PATH + "/dict.aiml.xml", false},
 		{conf.LOG_DIR_PATH, true},
 		{logFilePath, false},
 		{conf.COMMANDS_DIR_PATH, true},
-		{conf.COMMANDS_DIR_PATH + "/help.dat", false},
+		{conf.COMMANDS_DIR_PATH + "/help.xml", false},
 	}
 
 	log.Println("[INFO] File configuring has been finished. Starting check files.")
@@ -56,7 +52,7 @@ func main() {
 
 	log.Println("[INFO] Initializating vk api...")
 	var api vk.Api
-	api.AccessToken = conf.TOKEN
+	api.AccessToken = conf.VK_TOKEN
 	var dataCache cache.DataCache
 
 	messageChan := make(chan vk.Message)
@@ -73,6 +69,10 @@ func main() {
 		}
 	}()
 
+	//go func() {
+	//	speech.RequestAPI("test", api.ChanKit)
+	//}()
+
 	for {
 		select {
 		case message := <- messageChan:
@@ -84,12 +84,7 @@ func main() {
 			time.Sleep(time.Second / 3)
 		case <- time.After(time.Hour):
 			log.Println("[INFO] Time to update RSS files")
-			go func() {
-				rss.Update()
-				defer func() {
-					go dataCache.UpdateCache()
-				}()
-			}()
+			go dataCache.UpdateRssCache(rss.Update())
 		}
 	}
 }

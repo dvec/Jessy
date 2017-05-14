@@ -15,7 +15,7 @@ func check(err error) {
 	}
 }
 
-func ParseRss(url string, args ...string) (out string) {
+func ParseRss(url string, args ...string) (out []string) {
 	var begin, end string
 	if len(args) == 2 {
 		begin = args[0]
@@ -42,7 +42,7 @@ func ParseRss(url string, args ...string) (out string) {
 		to = strings.Index(code, end)
 		if from == -1 || to == -1 { break }
 		if to - from < conf.MAX_MESSAGE_LEN {
-			out += code[from:to] + "\\end\\\n"
+			out = append(out, code[from:to])
 		}
 		code = code[to+len(end):]
 	}
@@ -65,7 +65,10 @@ func ParseRss(url string, args ...string) (out string) {
 	}
 
 	for _, replacement := range filter {
-		out = strings.Replace(out, replacement.old, replacement.new, -1)
+		for index, story := range out {
+			out[index] = strings.Replace(story, replacement.old, replacement.new, -1)
+		}
 	}
+
 	return
 }
