@@ -27,7 +27,7 @@ func stringMinifier(in string) (out string) {
 func (aimlPattern *AIMLPattern) Regexify() *regexp.Regexp {
 	rString := aimlPattern.Content
 	rString = stringMinifier(rString)
-	toReplace := []string{"(", ")", ".", "+"}
+	toReplace := []string{"[", "]", ".", "+"}
 	for _, symbol := range toReplace {
 		rString = strings.Replace(rString, symbol, "\\" + symbol, -1)
 	}

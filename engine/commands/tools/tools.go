@@ -1,13 +1,21 @@
-package commands
+package tools
 
 import (
 	"strconv"
 	"fmt"
-	"main/engine/cache/cachetypes"
+	"main/engine/cache"
+	"main/web/vk"
+	"main/engine/commands/interception"
 )
 
+type FuncArgs struct {
+	ApiChan vk.ChanKit
+	Message vk.Message
+	DataCache cache.DataCache
+	InterceptIndications interception.Indications
+}
 
-func getRandomNum(text string) int {
+func GetRandomNum(text string) int {
 	out := 50
 	for _, char := range text {
 		out += int(char)
@@ -15,7 +23,7 @@ func getRandomNum(text string) int {
 	return out
 }
 
-func checkData(args []string, filter []string) bool {
+func CheckData(args []string, filter []string) bool {
 	if len(args) < len(filter) {
 		return false
 	}
@@ -37,13 +45,24 @@ func checkData(args []string, filter []string) bool {
 	return true
 }
 
-func getHelp(name string, cache cachetypes.HelpCache) string {
+func GetHelp(name string, cache cache.HelpCache) string {
 	if name == "" {
 		var commandList string
 		cache.Lock()
 		defer cache.Unlock()
 		for _, command := range cache.Data.HelpList {
-			commandList += fmt.Sprintf("&#128217;|%v \n", command.Name)
+			var emoji string
+			switch command.State {
+			case "ready":
+				emoji = "&#128215;"
+			case "test":
+				emoji = "&#128217;"
+			case "error":
+				emoji = "&#128213;"
+			case "dev":
+				emoji = "&#128216;"
+			}
+			commandList += fmt.Sprintf("%v | %v \n", emoji, command.Name)
 		}
 		return fmt.Sprintf("Список моих команд: \n%v" +
 			" Вы можете посмотреть справку по любой из них, набрав:" +
@@ -65,4 +84,13 @@ func getHelp(name string, cache cachetypes.HelpCache) string {
 		}
 	}
 	return "Нет справки по такой команде"
+}
+
+func Contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }

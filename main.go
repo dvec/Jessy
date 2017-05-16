@@ -10,6 +10,8 @@ import ("os"
 	"main/engine"
 	"main/engine/cache"
 //	"main/web/speech"
+	"main/engine/commands/interception"
+	"main/engine/commands/tools"
 )
 
 func main() {
@@ -73,11 +75,14 @@ func main() {
 	//	speech.RequestAPI("test", api.ChanKit)
 	//}()
 
+	indications := interception.Indications{}
+	indications.Init()
+
 	for {
 		select {
 		case message := <- messageChan:
 			log.Println("[INFO] New message detected: ", message)
-			go engine.Perform(api.ChanKit, message, dataCache)
+			go engine.Perform(tools.FuncArgs{api.ChanKit, message, dataCache, indications})
 		case request := <- api.ChanKit.RequestChan:
 			out, err := api.Request(request.Name, request.Params)
 			api.ChanKit.AnswerChan <- vk.Answer{out, err}

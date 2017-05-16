@@ -1,66 +1,83 @@
 package engine
 
 import (
-	"main/web/vk"
 	"strconv"
 	"strings"
 	"main/engine/commands"
 	"log"
-	"main/engine/cache"
+	"fmt"
+	"main/engine/commands/tools"
 )
 
-type function struct {
-	name 		string
-	function 	func(commands.FuncArgs)
+var commandsList = map[string]func(args tools.FuncArgs) {
+	"state": commands.GetState,
+	"help": commands.GetHelp,
+	"cities": commands.Cities,
+	"information": commands.GetGen,
+	"bash": commands.Bash,
+	"ithappens": commands.IThappens,
+	"zadolbali": commands.Zadolbali,
+	"news": commands.News,
 }
 
-func getFunctions() []function {
-	commandsList := []function {
-		{"статус", commands.GetState},
-		{"помощь", commands.GetHelp},
-		{"инфа", commands.GetGen},
-		{"баш", commands.Bash},
-		{"айти", commands.IThappens},
-		{"задолбали", commands.Zadolbali},
-		{"новости", commands.News},
-	}
-	return commandsList
-}
-
-func Perform(chanKit vk.ChanKit, message vk.Message, dataCache cache.DataCache) {
-	text := strings.ToLower(strings.Trim(message.Text, "?!():.,|"))
-	args := strings.Split(text, " ")
-	firstWord := strings.ToLower(args[0])
-	for _, command := range getFunctions() {
-		if firstWord == command.name {
-			log.Println("[INFO] Command detected: ", firstWord)
-			params := commands.FuncArgs{ApiChan: chanKit, Message: message, DataCache: dataCache}
-			command.function(params)
-			return
+func findFlags(text string, flags []string) (map[string]string, string) {
+	out := make(map[string]string)
+	minFlagindex := len(text)
+	for _, flag := range flags {
+		begin := fmt.Sprintf("<%v>", flag)
+		end := fmt.Sprintf("</%v>", flag)
+		beginIndex := strings.Index(text, begin)
+		endIndex := strings.Index(text, end)
+		if beginIndex < endIndex {
+			out[flag] = text[beginIndex + len(begin):endIndex]
+			if minFlagindex > beginIndex {
+				minFlagindex = beginIndex
+			}
 		}
 	}
-	log.Println("[INFO] No command detected. Running reiteration")
-	dataCache.DictionaryCache.Lock()
-	answer, err := dataCache.DictionaryCache.Data.Respond(strings.ToLower(text))
-	dataCache.DictionaryCache.Unlock()
+
+	return out, text[:minFlagindex]
+}
+
+func checkInterceptIndications(args tools.FuncArgs) bool {
+	args.InterceptIndications.Lock()
+	defer args.InterceptIndications.Unlock()
+	if args.InterceptIndications.InterceptedMessage[args.Message.UserId] != nil {
+		args.InterceptIndications.InterceptedMessage[args.Message.UserId] <- args.Message
+		return true
+	}
+	return false
+}
+
+func Perform(args tools.FuncArgs) {
+	if checkInterceptIndications(args) { return }
+	text := strings.ToLower(strings.Trim(args.Message.Text, "?!():.,|"))
+	log.Println("[INFO] No command detected. Running performation")
+	args.DataCache.DictionaryCache.Lock()
+	answer, err := args.DataCache.DictionaryCache.Data.Respond(strings.ToLower(text))
+	args.DataCache.DictionaryCache.Unlock()
 	if err != nil {
 		log.Println("[ERROR] [main::engine::performer.go] Failed to get answer: ", err)
 	}
 
 	params := map[string]string{
-		"user_id": strconv.FormatInt(message.UserId, 10),
+		"user_id": strconv.FormatInt(args.Message.UserId, 10),
 	}
-	attach := strings.Index(answer, "<attach>")
-	if attach != -1 {
-		attachEnd := strings.Index(answer, "</attach>")
-		if attachEnd != -1 {
-			params["attachment"] = answer[attach + len("<attach>"):attachEnd]
-			params["messsage"] = answer[:attach]
+	flags, newMessage := findFlags(answer, []string{"attach", "call"})
+	params["message"] = newMessage
+	params["attachment"] = flags["attach"]
+	if flags["call"] != "" {
+		funcParams := strings.Split(flags["call"], "|")
+		name := funcParams[0]
+
+		if commandsList[name] != nil {
+			args.Message.Text = funcParams[1]
+			commandsList[name](args)
+			return
 		} else {
 			params["message"] = "Internal error"
 		}
-	} else {
-		params["message"] = answer
 	}
-	chanKit.MakeRequest("messages.send", params)
+
+	args.ApiChan.MakeRequest("messages.send", params)
 }
