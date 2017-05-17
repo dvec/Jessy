@@ -6,10 +6,9 @@ import (
 	"main/engine/commands"
 	"log"
 	"fmt"
-	"main/engine/commands/tools"
 )
 
-var commandsList = map[string]func(args tools.FuncArgs) {
+var commandsList = map[string]func(args commands.FuncArgs) {
 	"state": commands.GetState,
 	"help": commands.GetHelp,
 	"cities": commands.Cities,
@@ -39,7 +38,7 @@ func findFlags(text string, flags []string) (map[string]string, string) {
 	return out, text[:minFlagindex]
 }
 
-func checkInterceptIndications(args tools.FuncArgs) bool {
+func checkInterceptIndications(args commands.FuncArgs) bool {
 	args.InterceptIndications.Lock()
 	defer args.InterceptIndications.Unlock()
 	if args.InterceptIndications.InterceptedMessage[args.Message.UserId] != nil {
@@ -49,7 +48,7 @@ func checkInterceptIndications(args tools.FuncArgs) bool {
 	return false
 }
 
-func Perform(args tools.FuncArgs) {
+func Perform(args commands.FuncArgs) {
 	if checkInterceptIndications(args) { return }
 	text := strings.ToLower(strings.Trim(args.Message.Text, "?!():.,|"))
 	log.Println("[INFO] No command detected. Running performation")

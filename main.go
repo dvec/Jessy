@@ -11,7 +11,7 @@ import ("os"
 	"main/engine/cache"
 //	"main/web/speech"
 	"main/engine/commands/interception"
-	"main/engine/commands/tools"
+	"main/engine/commands"
 )
 
 func main() {
@@ -52,7 +52,7 @@ func main() {
 	log.Println("[INFO] Updating RSS files...")
 	rss.Update()
 
-	log.Println("[INFO] Initializating vk api...")
+	log.Println("[INFO] Initializing vk api...")
 	var api vk.Api
 	api.AccessToken = conf.VK_TOKEN
 	var dataCache cache.DataCache
@@ -60,7 +60,7 @@ func main() {
 	messageChan := make(chan vk.Message)
 	api.InitChanKit()
 
-	log.Println("[INFO] Initializating cache...")
+	log.Println("[INFO] Initializing cache...")
 	dataCache.InitCache()
 	var lp vk.LongPoll
 
@@ -82,7 +82,7 @@ func main() {
 		select {
 		case message := <- messageChan:
 			log.Println("[INFO] New message detected: ", message)
-			go engine.Perform(tools.FuncArgs{api.ChanKit, message, dataCache, indications})
+			go engine.Perform(commands.FuncArgs{api.ChanKit, message, dataCache, indications})
 		case request := <- api.ChanKit.RequestChan:
 			out, err := api.Request(request.Name, request.Params)
 			api.ChanKit.AnswerChan <- vk.Answer{out, err}

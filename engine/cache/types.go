@@ -48,7 +48,7 @@ func (helpCache *HelpCache) InitCache() {
 
 type City struct {
 	XMLName xml.Name `xml:"city"`
-	Name string `xml:"name"`
+	Name string `xml:"name,attr"`
 }
 
 type XMLCities struct {

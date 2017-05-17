@@ -4,16 +4,7 @@ import (
 	"strconv"
 	"fmt"
 	"main/engine/cache"
-	"main/web/vk"
-	"main/engine/commands/interception"
 )
-
-type FuncArgs struct {
-	ApiChan vk.ChanKit
-	Message vk.Message
-	DataCache cache.DataCache
-	InterceptIndications interception.Indications
-}
 
 func GetRandomNum(text string) int {
 	out := 50
@@ -23,14 +14,14 @@ func GetRandomNum(text string) int {
 	return out
 }
 
-func CheckData(args []string, filter []string) bool {
-	if len(args) < len(filter) {
+func CheckData(args []string, template []string) bool {
+	if len(args) < len(template) {
 		return false
 	}
 
 	l: for index, word := range args {
-		if index < len(filter) {
-			switch filter[index] {
+		if index < len(template) {
+			switch template[index] {
 			case "i":
 				_, err := strconv.ParseInt(word, 10, 64)
 				if err != nil {
@@ -48,21 +39,17 @@ func CheckData(args []string, filter []string) bool {
 func GetHelp(name string, cache cache.HelpCache) string {
 	if name == "" {
 		var commandList string
+		var emojiDict = map[string]string{
+			"ready": "&#128215;",
+			"test": "&#128217;",
+			"error": "&#128213;",
+			"dev": "&#128216;",
+
+		}
 		cache.Lock()
 		defer cache.Unlock()
 		for _, command := range cache.Data.HelpList {
-			var emoji string
-			switch command.State {
-			case "ready":
-				emoji = "&#128215;"
-			case "test":
-				emoji = "&#128217;"
-			case "error":
-				emoji = "&#128213;"
-			case "dev":
-				emoji = "&#128216;"
-			}
-			commandList += fmt.Sprintf("%v | %v \n", emoji, command.Name)
+			commandList += fmt.Sprintf("%v | %v \n", emojiDict[command.State], command.Name)
 		}
 		return fmt.Sprintf("Список моих команд: \n%v" +
 			" Вы можете посмотреть справку по любой из них, набрав:" +
@@ -86,9 +73,9 @@ func GetHelp(name string, cache cache.HelpCache) string {
 	return "Нет справки по такой команде"
 }
 
-func Contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
+func Contains(arr []string, value string) bool {
+	for _, a := range arr {
+		if a == value {
 			return true
 		}
 	}
