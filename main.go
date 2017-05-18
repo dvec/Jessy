@@ -7,18 +7,21 @@ import ("os"
 	"main/conf"
 	"main/web/vk"
 	"main/web/rss"
-	"main/engine"
-	"main/engine/cache"
-	"main/engine/commands/interception"
-	"main/engine/commands"
+	"main/kernel"
+	"main/kernel/cache"
+	"main/kernel/interception"
+	"main/kernel/commands"
 )
 
+//Is log will be written
 const isLogFileWritten = false
 
-func main() {
-	log.Println("[INFO] main.go started")
-	logFilePath := conf.LOG_DIR_PATH + "/" + fmt.Sprintf("%d", time.Now().Unix()) + ".log"
-	pathWays := []struct{
+var (
+	//New log file name
+	logFilePath = conf.LOG_DIR_PATH + "/" + fmt.Sprintf("%d", time.Now().Unix()) + ".log"
+
+	//Mandatory files list
+	pathWays = []struct{
 		path string
 		isDir bool
 	}{
@@ -30,8 +33,11 @@ func main() {
 		{conf.COMMANDS_DIR_PATH + "/help.xml", false}, // data/commands/help.xml
 		{conf.COMMANDS_DIR_PATH + "/cities.xml", false}, // data/commands/cities.xml
 	}
+)
 
-	log.Println("[INFO] File configuring has been finished. Starting check files.")
+func main() {
+	log.Println("[INFO] main.go started")
+	//Checking files
 	for _, file := range pathWays {
 		if _, err := os.Stat(file.path); os.IsNotExist(err) {
 			if file.isDir {
@@ -48,26 +54,34 @@ func main() {
 		log.Print("[ERROR] [main::main()] Failed to open log file: ", fileOpenError)
 	}
 
+	//Redirecting log output
 	//noinspection ALL
 	if isLogFileWritten {
 		log.Println("[INFO] Output will be redirected to a log file.")
 		log.SetOutput(logFile)
 	}
 
+	//vk API initialization
 	log.Println("[INFO] Initializing vk api...")
 	var api vk.Api
 	api.AccessToken = conf.VK_TOKEN
 	var dataCache cache.DataCache
 
+	//Chan initialization
 	messageChan := make(chan vk.Message)
 	api.InitChanKit()
 
+	//RSS file (news, bash, etc) initialization
 	log.Println("[INFO] Initializing cache...")
 	dataCache.InitCache()
 	rss.UpdateRss(&dataCache.RssCache)
 
-	var lp vk.LongPoll
+	//Intercept indications init
+	indications := interception.Indications{}
+	indications.Init()
 
+	//Runs long poll checking
+	var lp vk.LongPoll
 	go func() {
 		lp.Init(api.ChanKit)
 		for {
@@ -75,19 +89,17 @@ func main() {
 		}
 	}()
 
-	indications := interception.Indications{}
-	indications.Init()
-
+	//Chan checking
 	for {
 		select {
-		case message := <- messageChan:
+		case message := <- messageChan: //New message
 			log.Println("[INFO] New message detected: ", message)
-			go engine.Perform(commands.FuncArgs{api.ChanKit, message, dataCache, indications})
-		case request := <- api.ChanKit.RequestChan:
+			go kernel.Perform(commands.FuncArgs{api.ChanKit, message, dataCache, indications})
+		case request := <- api.ChanKit.RequestChan: //New api request
 			out, err := api.Request(request.Name, request.Params)
 			api.ChanKit.AnswerChan <- vk.Answer{out, err}
 			time.Sleep(time.Second / conf.MAX_REQUEST_PER_SECOND)
-		case <- time.After(conf.RSS_UPDATE_DELAY):
+		case <- time.After(conf.RSS_UPDATE_DELAY): //Time to update cache
 			log.Println("[INFO] Time to update RSS files")
 			go rss.UpdateRss(&dataCache.RssCache)
 		}

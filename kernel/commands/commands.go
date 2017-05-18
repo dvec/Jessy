@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 	"fmt"
-	"main/engine/commands/tools"
+	"main/kernel/commands/tools"
 	"main/web/vk"
-	"main/engine/cache"
-	"main/engine/commands/interception"
+	"main/kernel/cache"
+	"main/kernel/interception"
 )
 
 type FuncArgs struct {
@@ -37,9 +37,9 @@ const (
 	winMessage		= "Ты выиграл. Мои поздравления! Я начинаю новую игру"
 	alreadyError		= "Уже было!"
 	badInputError 		= "Используй только русские буквы!"
-	welcomeMessage		= "Добро пожаловать в игру 'города'! Для выхода напиши 'хватит'. Начинай!"
+	welcomeMessage		= `Добро пожаловать в игру 'города'! Для выхода напиши "хватит". Начинай!`
 	badInputLenError	= "Город не может состоять только из этих букв"
-	incorrectSymbolError 	= "Ты должен назвать слово на букву %v"
+	incorrectSymbolError 	= `Ты должен назвать слово на букву "%v"`
 )
 
 func GetState(args FuncArgs) {
@@ -99,8 +99,8 @@ func Zadolbali(args FuncArgs) {
 func News(args FuncArgs) {
 	words := strings.Split(args.Message.Text, " ")
 	var message string
-	if tools.IfMatch(words, []string{"s", "i"}) {
-		count, _ := strconv.ParseInt(words[1], 10, 8)
+	if tools.IfMatch(words, []string{"i"}) {
+		count, _ := strconv.ParseInt(words[0], 10, 8)
 		if count > 7 {
 			message = tooMuchNewsCountError
 		} else {
@@ -149,7 +149,7 @@ func Cities(args FuncArgs) {
 		}
 
 		if expectedSymbol != 0 && expectedSymbol != runes[0] {
-			answer = fmt.Sprintf(incorrectSymbolError, expectedSymbol)
+			answer = fmt.Sprintf(incorrectSymbolError, string(expectedSymbol))
 			goto SEND
 		}
 

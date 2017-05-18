@@ -3,7 +3,7 @@ package tools
 import (
 	"strconv"
 	"fmt"
-	"main/engine/cache/cachetypes"
+	"main/kernel/cache/cachetypes"
 )
 
 const (
@@ -11,9 +11,9 @@ const (
 	startNum	= 50
 
 	//CHECK_DATA
-	IntegerTag  = "i"
-	StringTag   = "s"
-	AnythingTag = "*"
+	IntegerTag  	= "i"
+	StringTag   	= "s"
+	AnythingTag 	= "*"
 
 	//GET_HELP
 	DefaultTag      = ""

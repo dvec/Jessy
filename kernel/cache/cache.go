@@ -2,8 +2,8 @@ package cache
 
 import (
 	"main/conf"
-	"main/engine/aiml"
-	"main/engine/cache/cachetypes"
+	"main/kernel/aiml"
+	"main/kernel/cache/cachetypes"
 )
 
 type RssCaches struct {

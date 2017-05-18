@@ -19,4 +19,3 @@ func (chanKit ChanKit)MakeRequest(name string, params map[string]string) Answer 
 	chanKit.RequestChan <- Request{name, params}
 	return <- chanKit.AnswerChan
 }
-

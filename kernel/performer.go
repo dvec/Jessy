@@ -1,11 +1,19 @@
-package engine
+package kernel
 
 import (
 	"strconv"
 	"strings"
-	"main/engine/commands"
+	"main/kernel/commands"
 	"log"
 	"fmt"
+)
+
+const (
+	callSep			= "|"
+	callFlag		= "call"
+	attachFlag 		= "attach"
+	inputCutset		= "?!():.,|"
+	internalErrorMessage	= "Internal error"
 )
 
 var commandsList = map[string]func(args commands.FuncArgs) {
@@ -50,23 +58,23 @@ func checkInterceptIndications(args commands.FuncArgs) bool {
 
 func Perform(args commands.FuncArgs) {
 	if checkInterceptIndications(args) { return }
-	text := strings.ToLower(strings.Trim(args.Message.Text, "?!():.,|"))
+	text := strings.ToLower(strings.Trim(args.Message.Text, inputCutset))
 	log.Println("[INFO] No command detected. Running performation")
 	args.DataCache.DictionaryCache.Lock()
 	answer, err := args.DataCache.DictionaryCache.Data.Respond(strings.ToLower(text))
 	args.DataCache.DictionaryCache.Unlock()
 	if err != nil {
-		log.Println("[ERROR] [main::engine::performer.go] Failed to get answer: ", err)
+		log.Println("[ERROR] [main::kernel::performer.go] Failed to get answer: ", err)
 	}
 
 	params := map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
 	}
-	flags, newMessage := findFlags(answer, []string{"attach", "call"})
+	flags, newMessage := findFlags(answer, []string{attachFlag, callFlag})
 	params["message"] = newMessage
 	params["attachment"] = flags["attach"]
 	if flags["call"] != "" {
-		funcParams := strings.Split(flags["call"], "|")
+		funcParams := strings.Split(flags[callFlag], callSep)
 		name := funcParams[0]
 
 		if commandsList[name] != nil {
@@ -74,7 +82,7 @@ func Perform(args commands.FuncArgs) {
 			commandsList[name](args)
 			return
 		} else {
-			params["message"] = "Internal error"
+			params["message"] = internalErrorMessage
 		}
 	}
 

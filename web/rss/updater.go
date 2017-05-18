@@ -3,8 +3,8 @@ package rss
 import (
 	"log"
 	"encoding/xml"
-	"main/engine/cache"
-	"main/engine/cache/cachetypes"
+	"main/kernel/cache"
+	"main/kernel/cache/cachetypes"
 )
 
 type Data struct {

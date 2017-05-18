@@ -22,6 +22,8 @@ type LongPoll struct {
 	ts	int64
 }
 
+type NewMessageChan chan<- Message
+
 const (
 	UNREAD = 1
 	CHAT = 16
@@ -41,7 +43,7 @@ func (lp *LongPoll) Init(chanKit ChanKit) {
 	lp.ts = int64(response["ts"].(float64))
 }
 
-func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
+func (lp *LongPoll) Go(chanKit ChanKit, messageChan NewMessageChan) {
 	resp, err := http.Get(fmt.Sprintf("https://%v?act=a_check&key=%v&ts=%v&wait=%v&mode=2&version=1", lp.server, lp.key, lp.ts, conf.VK_TIMEOUT))
 	if err != nil {
 		log.Println("[ERROR] [Messages::Go]: failed to get response: ", err)
@@ -60,8 +62,8 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 		return
 	}
 	if response["failed"] != nil {
-		log.Println("[INFO] Reinitializating chanKit...")
 		lp.Init(chanKit)
+		log.Println("[INFO] chanKit has been reinitialized")
 	} else {
 		type jsonBody struct {
 			Failed  int64           `json:"failed"`
@@ -94,5 +96,11 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan chan<- Message) {
 			}
 		}
 		lp.ts = body.Ts
+	}
+}
+
+func (lp *LongPoll) Start(kit ChanKit, messageChan NewMessageChan) {
+	for {
+		lp.Go(kit, messageChan)
 	}
 }

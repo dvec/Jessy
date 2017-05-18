@@ -26,12 +26,12 @@ type CitiesCache struct {
 func (citiesCache *CitiesCache) InitCache(path string) {
 	text, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Println("[ERROR] [main::engine::mapCache::cachetypes::cachetypes.go::CitiesCache.InitCache] Failed to read file: ", err)
+		log.Println("[ERROR] [main::kernel::mapCache::cachetypes::cachetypes.go::CitiesCache.InitCache] Failed to read file: ", err)
 	}
 
 	citiesCache.Lock()
 	defer citiesCache.Unlock()
 	if err := xml.Unmarshal(text, &citiesCache.Data); err != nil {
-		log.Println("[ERROR] [main::engine::mapCache::cachetypes::cachetypes.go::CitiesCache.InitCache] Failed to unmarshal data: ", err)
+		log.Println("[ERROR] [main::kernel::mapCache::cachetypes::cachetypes.go::CitiesCache.InitCache] Failed to unmarshal data: ", err)
 	}
 }

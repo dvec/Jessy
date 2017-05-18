@@ -2,7 +2,7 @@ package cachetypes
 
 import (
 	"sync"
-	"main/engine/aiml"
+	"main/kernel/aiml"
 	"log"
 )
 
@@ -14,7 +14,7 @@ type DictCache struct {
 func (dictCache *DictCache) UpdateCache(path string) {
 	dictCache.Lock()
 	if err := dictCache.Data.Learn(path); err != nil {
-		log.Println("[ERROR] [main::engine::mapCache::mapCache.go::DictCache.InitCache()] Failed to update mapCache ", err)
+		log.Println("[ERROR] [main::kernel::mapCache::mapCache.go::DictCache.InitCache()] Failed to update mapCache ", err)
 	}
 	dictCache.Unlock()
 }
