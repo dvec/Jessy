@@ -9,10 +9,11 @@ import ("os"
 	"main/web/rss"
 	"main/engine"
 	"main/engine/cache"
-//	"main/web/speech"
 	"main/engine/commands/interception"
 	"main/engine/commands"
 )
+
+const isLogFileWritten = false
 
 func main() {
 	log.Println("[INFO] main.go started")
@@ -21,12 +22,13 @@ func main() {
 		path string
 		isDir bool
 	}{
-		{conf.DATA_DIR_PATH, true},
-		{conf.DATA_DIR_PATH + "/dict.aiml.xml", false},
-		{conf.LOG_DIR_PATH, true},
-		{logFilePath, false},
-		{conf.COMMANDS_DIR_PATH, true},
-		{conf.COMMANDS_DIR_PATH + "/help.xml", false},
+		{conf.DATA_DIR_PATH, true}, // data
+		{conf.DATA_DIR_PATH + "/dict.aiml.xml", false}, // data/dict.aiml.xml
+		{conf.LOG_DIR_PATH, true}, // data/log
+		{logFilePath, false}, // data/log/xxxxxxxxxx.log
+		{conf.COMMANDS_DIR_PATH, true}, // data/commands
+		{conf.COMMANDS_DIR_PATH + "/help.xml", false}, // data/commands/help.xml
+		{conf.COMMANDS_DIR_PATH + "/cities.xml", false}, // data/commands/cities.xml
 	}
 
 	log.Println("[INFO] File configuring has been finished. Starting check files.")
@@ -41,16 +43,16 @@ func main() {
 		}
 	}
 
-	log.Println("[INFO] Output will be redirected to a log file.")
 	logFile, fileOpenError := os.OpenFile(logFilePath, os.O_RDWR, conf.DATA_FILE_PERMISSION)
 	if fileOpenError != nil {
 		log.Print("[ERROR] [main::main()] Failed to open log file: ", fileOpenError)
 	}
 
-	log.SetOutput(logFile)
-
-	log.Println("[INFO] Updating RSS files...")
-	rss.Update()
+	//noinspection ALL
+	if isLogFileWritten {
+		log.Println("[INFO] Output will be redirected to a log file.")
+		log.SetOutput(logFile)
+	}
 
 	log.Println("[INFO] Initializing vk api...")
 	var api vk.Api
@@ -62,6 +64,8 @@ func main() {
 
 	log.Println("[INFO] Initializing cache...")
 	dataCache.InitCache()
+	rss.UpdateRss(&dataCache.RssCache)
+
 	var lp vk.LongPoll
 
 	go func() {
@@ -70,10 +74,6 @@ func main() {
 			lp.Go(api.ChanKit, messageChan)
 		}
 	}()
-
-	//go func() {
-	//	speech.RequestAPI("test", api.ChanKit)
-	//}()
 
 	indications := interception.Indications{}
 	indications.Init()
@@ -86,10 +86,10 @@ func main() {
 		case request := <- api.ChanKit.RequestChan:
 			out, err := api.Request(request.Name, request.Params)
 			api.ChanKit.AnswerChan <- vk.Answer{out, err}
-			time.Sleep(time.Second / 3)
-		case <- time.After(time.Hour):
+			time.Sleep(time.Second / conf.MAX_REQUEST_PER_SECOND)
+		case <- time.After(conf.RSS_UPDATE_DELAY):
 			log.Println("[INFO] Time to update RSS files")
-			go dataCache.UpdateRssCache(rss.Update())
+			go rss.UpdateRss(&dataCache.RssCache)
 		}
 	}
 }

@@ -43,7 +43,8 @@ func (aimlTemplate *AIMLTemplate) ProcessGet(aiml *AIML) error {
 	content, ok := aiml.Memory[getStruct.Name]
 
 	if !ok {
-		return errors.New("Key not found in memory")
+		content = "..."
+		//return errors.New("Key not found in memory")
 	}
 
 	aimlTemplate.Content = strings.Replace(aimlTemplate.Content, `<get name="`+getStruct.Name+`"/>`, content, -1)

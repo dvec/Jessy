@@ -27,16 +27,13 @@ const (
 	//GET_GEN
 	getGenAnswer		= "С вероятностью %v%%"
 
-	//GET_HELP
-	defaultHelpRequest	= ""
-
 	//NEWS
 	tooMuchNewsCountError	= "Я не помню столько новостей"
 
 	//CITIES
 	endCommand		= "хватит"
 	endMessage		= "Игра прекращена. Ты можешь продолжать со мной общение"
-	cityCutset		= "ьъый"
+	cityCutset		= "ьъый" //To delete these strings from the city name
 	winMessage		= "Ты выиграл. Мои поздравления! Я начинаю новую игру"
 	alreadyError		= "Уже было!"
 	badInputError 		= "Используй только русские буквы!"
@@ -70,7 +67,7 @@ func GetHelp(args FuncArgs) {
 	if len(args.Message.Text) != 1 {
 		message = tools.GetHelp(args.Message.Text, args.DataCache.CommandDataCache.Help)
 	} else {
-		message = tools.GetHelp(defaultHelpRequest, args.DataCache.CommandDataCache.Help)
+		message = tools.GetHelp(tools.DefaultTag, args.DataCache.CommandDataCache.Help)
 	}
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
@@ -81,36 +78,36 @@ func GetHelp(args FuncArgs) {
 func Bash(args FuncArgs) {
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": args.DataCache.RSSCache.Bash.ChooseRandom(),
+		"message": args.DataCache.RssCache.Bash.ChooseRandom(),
 	})
 }
 
 func IThappens(args FuncArgs) {
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": args.DataCache.RSSCache.IThappens.ChooseRandom(),
+		"message": args.DataCache.RssCache.IThappens.ChooseRandom(),
 	})
 }
 
 func Zadolbali(args FuncArgs) {
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": args.DataCache.RSSCache.Zadolbali.ChooseRandom(),
+		"message": args.DataCache.RssCache.Zadolbali.ChooseRandom(),
 	})
 }
 
 func News(args FuncArgs) {
 	words := strings.Split(args.Message.Text, " ")
 	var message string
-	if tools.CheckData(words, []string{"s", "i"}) {
+	if tools.IfMatch(words, []string{"s", "i"}) {
 		count, _ := strconv.ParseInt(words[1], 10, 8)
 		if count > 7 {
 			message = tooMuchNewsCountError
 		} else {
-			message = strings.Join(args.DataCache.RSSCache.News.Data[:count], "\n")
+			message = strings.Join(args.DataCache.RssCache.News.Data[:count], "\n")
 		}
 	} else {
-		message = strings.Join(args.DataCache.RSSCache.News.Data[:3], "\n")
+		message = strings.Join(args.DataCache.RssCache.News.Data[:3], "\n")
 	}
 
 	args.ApiChan.MakeRequest("messages.send", map[string]string{

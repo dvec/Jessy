@@ -3,7 +3,7 @@ package tools
 import (
 	"strconv"
 	"fmt"
-	"main/engine/cache"
+	"main/engine/cache/cachetypes"
 )
 
 const (
@@ -11,13 +11,14 @@ const (
 	startNum	= 50
 
 	//CHECK_DATA
-	integerTag 	= "i"
-	stringTag	= "s"
-	anythingTag	= "*"
+	IntegerTag  = "i"
+	StringTag   = "s"
+	AnythingTag = "*"
 
 	//GET_HELP
-	ponyDescription	= "%v | %v \n"
-	simpleAnswer	= "Список моих команд: \n%v" +
+	DefaultTag      = ""
+	ponyDescription = "%v | %v \n"
+	simpleAnswer    = "Список моих команд: \n%v" +
 		" Вы можете посмотреть справку по любой из них, набрав:" +
 		" \nпомощь [название команды]"
 	complexAnswer	= `Справка по команде "%v": %v %v`
@@ -34,6 +35,7 @@ var emojiDict = map[string]string{
 
 }
 
+//Function returns a random value based on a string (text).
 func GetRandomNum(text string) int {
 	out := startNum
 	for _, char := range text {
@@ -42,7 +44,8 @@ func GetRandomNum(text string) int {
 	return out
 }
 
-func CheckData(args []string, template []string) bool {
+//Function checks if the array of strings (args) matches template (template).
+func IfMatch(args []string, template []string) bool {
 	if len(args) < len(template) {
 		return false
 	}
@@ -50,24 +53,29 @@ func CheckData(args []string, template []string) bool {
 	l: for index, word := range args {
 		if index < len(template) {
 			switch template[index] {
-			case integerTag:
+			case IntegerTag:
 				_, err := strconv.ParseInt(word, 10, 64)
 				if err != nil {
 					return false
 				}
-			case stringTag:
+			case StringTag:
 				//TODO ADD
-			case anythingTag:
+			case AnythingTag:
 				break l
 			}
+		}
+
+		if index > len(template) {
+			return false
 		}
 	}
 
 	return true
 }
 
-func GetHelp(name string, cache cache.HelpCache) string {
-	if name == "" {
+//Function returns function reference with a name (name). Also you must pass HelpCache to boost speed.
+func GetHelp(name string, cache cachetypes.HelpCache) string {
+	if name == DefaultTag {
 		var commandList string
 		cache.Lock()
 		defer cache.Unlock()
@@ -93,6 +101,7 @@ func GetHelp(name string, cache cache.HelpCache) string {
 	return noHelpError
 }
 
+//Function returns true if array (arr) contains value (value) and false in other cases
 func Contains(arr []string, value string) bool {
 	for _, a := range arr {
 		if a == value {

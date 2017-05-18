@@ -3,6 +3,8 @@ package rss
 import (
 	"log"
 	"encoding/xml"
+	"main/engine/cache"
+	"main/engine/cache/cachetypes"
 )
 
 type Data struct {
@@ -12,20 +14,23 @@ type Data struct {
 	Data     []string `xml:"stories>story"`
 }
 
-func Update() map[string][]string {
-	out := make(map[string][]string)
-	log.Print("[INFO] Start updating files")
-	patches := map[string][2]string{
-		"news": {"data/rss/news.xml", "http://lenta.ru/rss"},
-		"bash": {"data/rss/bash.xml", "http://bash.im/rss/"},
-		"ithappens": {"data/rss/ithappens.xml", "http://ithappens.me/rss"},
-		"zadolbali": {"data/rss/zadolbali.xml", "http://zadolba.li/rss"},
+func UpdateRss(cache *cache.RssCaches) {
+	var patches = []struct {
+		cache *cachetypes.RssCache
+		path string
+		webPath string
+	}{
+		{&cache.News, "data/rss/news.xml", "http://lenta.ru/rss"},
+		{&cache.Bash, "data/rss/bash.xml", "http://bash.im/rss/"},
+		{&cache.IThappens, "data/rss/ithappens.xml", "http://ithappens.me/rss"},
+		{&cache.Zadolbali, "data/rss/zadolbali.xml", "http://zadolba.li/rss"},
 	}
 
-	for name, value := range patches {
-		stories := ParseRss(value[1])
-		out[name] = stories
-		log.Print("[INFO] Successfully updated ", value[0])
+	log.Print("[INFO] Start updating files")
+	for _, value := range patches {
+		value.cache.Lock()
+		value.cache.Data = ParseRss(value.webPath)
+		value.cache.Unlock()
+		log.Print("[INFO] Successfully updated ", value.path)
 	}
-	return out
 }

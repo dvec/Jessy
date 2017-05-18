@@ -16,7 +16,6 @@ func (aiml *AIML) Learn(mainFile string) error {
 	defer xmlFile.Close()
 
 	bytes, _ := ioutil.ReadAll(xmlFile)
-
 	return xml.Unmarshal(bytes, &aiml.Root)
 }
 

@@ -3,41 +3,38 @@ package cache
 import (
 	"main/conf"
 	"main/engine/aiml"
-	"main/web/rss"
+	"main/engine/cache/cachetypes"
 )
 
+type RssCaches struct {
+	News      cachetypes.RssCache
+	Bash      cachetypes.RssCache
+	IThappens cachetypes.RssCache
+	Zadolbali cachetypes.RssCache
+}
+
+type CommandDataCaches struct {
+	Help	cachetypes.HelpCache
+	Cities 	cachetypes.CitiesCache
+}
+
 type DataCache struct {
-	RSSCache struct{
-		News      RssCache
-		Bash      RssCache
-		IThappens RssCache
-		Zadolbali RssCache
-	}
-	CommandDataCache struct{
-		Help	HelpCache
-		Cities 	CitiesCache
-	}
-	DictionaryCache DictCache
+	RssCache RssCaches
+	CommandDataCache CommandDataCaches
+	DictionaryCache cachetypes.DictCache
 }
 
 func (cache *DataCache) InitCache() {
-	cache.CommandDataCache.Help.path = conf.COMMANDS_DIR_PATH + "/help.xml"
-	cache.CommandDataCache.Cities.path = conf.COMMANDS_DIR_PATH + "/cities.xml"
-	cache.DictionaryCache.Path = conf.DATA_DIR_PATH + "/dict.aiml.xml"
-
 	cache.DictionaryCache.Data = *aiml.NewAIML()
-	cache.DictionaryCache.Data.Memory["message"] = "..."
 
-	cache.CommandDataCache.Help.InitCache()
-	cache.CommandDataCache.Cities.InitCache()
-	cache.DictionaryCache.UpdateCache()
-
-	cache.UpdateRssCache(rss.Update())
+	cache.CommandDataCache.Help.InitCache(conf.COMMANDS_DIR_PATH + "/help.xml")
+	cache.CommandDataCache.Cities.InitCache(conf.COMMANDS_DIR_PATH + "/cities.xml")
+	cache.DictionaryCache.UpdateCache(conf.DATA_DIR_PATH + "/dict.aiml.xml")
 }
 
-func (cache *DataCache) UpdateRssCache(newCache map[string][]string) {
-	cache.RSSCache.News.Data = newCache["news"]
-	cache.RSSCache.Bash.Data = newCache["bash"]
-	cache.RSSCache.IThappens.Data = newCache["ithappens"]
-	cache.RSSCache.Zadolbali.Data = newCache["zadolbali"]
+func (cache *RssCaches) UpdateRssCache(newCache map[string][]string) {
+	cache.News.Data = newCache["news"]
+	cache.Bash.Data = newCache["bash"]
+	cache.IThappens.Data = newCache["ithappens"]
+	cache.Zadolbali.Data = newCache["zadolbali"]
 }

@@ -12,7 +12,7 @@ func TestParseData(t *testing.T) {
 	{[]string{"just", "a", "test", "9"}, []string{"s", "s", "s", "i"}, true},
 	{[]string{"000", "000", "000", "000"}, []string{"i", "i", "i", "i"}, true},}
 	for _, test := range tests {
-		if CheckData(test.args, test.expected) != test.expectedResult {
+		if IfMatch(test.args, test.expected) != test.expectedResult {
 			t.Fail()
 		}
 	}
