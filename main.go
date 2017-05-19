@@ -11,6 +11,7 @@ import ("os"
 	"main/kernel/cache"
 	"main/kernel/interception"
 	"main/kernel/commands"
+	"strconv"
 )
 
 //Is log will be written
@@ -18,7 +19,7 @@ const isLogFileWritten = false
 
 var (
 	//New log file name
-	logFilePath = conf.LOG_DIR_PATH + "/" + fmt.Sprintf("%d", time.Now().Unix()) + ".log"
+	logFilePath = fmt.Sprintf("%v/%v.log", conf.LOG_DIR_PATH, strconv.FormatInt(time.Now().Unix(), 10))
 
 	//Mandatory files list
 	pathWays = []struct{
@@ -38,27 +39,26 @@ var (
 func main() {
 	log.Println("[INFO] main.go started")
 	//Checking files
-	for _, file := range pathWays {
-		if _, err := os.Stat(file.path); os.IsNotExist(err) {
-			if file.isDir {
-				os.Mkdir(file.path, conf.DATA_FILE_PERMISSION)
-			} else {
-				os.OpenFile(file.path, os.O_CREATE, conf.DATA_FILE_PERMISSION)
+	for _, path := range pathWays {
+		if _, err := os.Stat(path.path); os.IsNotExist(err) {
+			if path.isDir { //Create dir if not exist
+				os.Mkdir(path.path, conf.DATA_FILE_PERMISSION)
+			} else { //Create path if not exist
+				os.OpenFile(path.path, os.O_CREATE, conf.DATA_FILE_PERMISSION)
 			}
-			log.Print("[INFO] ", file.path, " has been created")
+			log.Print("[INFO] ", path.path, " has been created") //Log path/dir creation
 		}
 	}
 
 	logFile, fileOpenError := os.OpenFile(logFilePath, os.O_RDWR, conf.DATA_FILE_PERMISSION)
 	if fileOpenError != nil {
-		log.Print("[ERROR] [main::main()] Failed to open log file: ", fileOpenError)
+		log.Print("[ERROR] [main::main()] Failed to open log path: ", fileOpenError)
 	}
 
-	//Redirecting log output
 	//noinspection ALL
 	if isLogFileWritten {
-		log.Println("[INFO] Output will be redirected to a log file.")
-		log.SetOutput(logFile)
+		log.Println("[INFO] Output will be redirected to a log path.")
+		log.SetOutput(logFile) //Redirecting log output
 	}
 
 	//vk API initialization
@@ -68,10 +68,10 @@ func main() {
 	var dataCache cache.DataCache
 
 	//Chan initialization
-	messageChan := make(chan vk.Message)
+	log.Println("[INFO] Initializating chan kit...")
 	api.InitChanKit()
 
-	//RSS file (news, bash, etc) initialization
+	//RSS path (news, bash, etc) initialization
 	log.Println("[INFO] Initializing cache...")
 	dataCache.InitCache()
 	rss.UpdateRss(&dataCache.RssCache)
@@ -82,26 +82,25 @@ func main() {
 
 	//Runs long poll checking
 	var lp vk.LongPoll
-	go func() {
-		lp.Init(api.ChanKit)
-		for {
-			lp.Go(api.ChanKit, messageChan)
-		}
-	}()
+	go lp.Start(api.ChanKit)
 
 	//Chan checking
 	for {
 		select {
-		case message := <- messageChan: //New message
+		case message := <- lp.NewMessageChan: //New message
 			log.Println("[INFO] New message detected: ", message)
-			go kernel.Perform(commands.FuncArgs{api.ChanKit, message, dataCache, indications})
+			args := commands.FuncArgs{
+				ApiChan: api.ChanKit, Message: message,
+				DataCache: dataCache, InterceptIndications: indications,
+			} //Creating func params
+			go kernel.Perform(args)
 		case request := <- api.ChanKit.RequestChan: //New api request
-			out, err := api.Request(request.Name, request.Params)
-			api.ChanKit.AnswerChan <- vk.Answer{out, err}
-			time.Sleep(time.Second / conf.MAX_REQUEST_PER_SECOND)
+			out, err := api.Request(request.Name, request.Params) //Request API method
+			api.ChanKit.AnswerChan <- vk.Answer{out, err} //Sending API answer back
+			time.Sleep(time.Second / conf.MAX_REQUEST_PER_SECOND) //Delay
 		case <- time.After(conf.RSS_UPDATE_DELAY): //Time to update cache
 			log.Println("[INFO] Time to update RSS files")
-			go rss.UpdateRss(&dataCache.RssCache)
+			go rss.UpdateRss(&dataCache.RssCache)  //Updating RSS in new thread
 		}
 	}
 }

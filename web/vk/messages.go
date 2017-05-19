@@ -16,20 +16,21 @@ type Message struct {
 	Attachments map[string]interface{}
 }
 
+type NewMessageChan chan Message
+
 type LongPoll struct {
 	key	string
 	server	string
 	ts	int64
+	NewMessageChan
 }
-
-type NewMessageChan chan<- Message
 
 const (
 	UNREAD = 1
 	CHAT = 16
 )
 
-func (lp *LongPoll) Init(chanKit ChanKit) {
+func (lp *LongPoll) Start(chanKit ChanKit) {
 	answer := chanKit.MakeRequest("messages.getLongPollServer", nil)
 	if answer.Error != nil {
 		log.Println("[ERROR] [Messages::init]:", answer.Error)
@@ -41,9 +42,13 @@ func (lp *LongPoll) Init(chanKit ChanKit) {
 	lp.key = response["key"].(string)
 	lp.server = response["server"].(string)
 	lp.ts = int64(response["ts"].(float64))
+
+	for {
+		lp.Go(chanKit)
+	}
 }
 
-func (lp *LongPoll) Go(chanKit ChanKit, messageChan NewMessageChan) {
+func (lp *LongPoll) Go(chanKit ChanKit) {
 	resp, err := http.Get(fmt.Sprintf("https://%v?act=a_check&key=%v&ts=%v&wait=%v&mode=2&version=1", lp.server, lp.key, lp.ts, conf.VK_TIMEOUT))
 	if err != nil {
 		log.Println("[ERROR] [Messages::Go]: failed to get response: ", err)
@@ -62,7 +67,7 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan NewMessageChan) {
 		return
 	}
 	if response["failed"] != nil {
-		lp.Init(chanKit)
+		lp.Start(chanKit)
 		log.Println("[INFO] chanKit has been reinitialized")
 	} else {
 		type jsonBody struct {
@@ -91,16 +96,10 @@ func (lp *LongPoll) Go(chanKit ChanKit, messageChan NewMessageChan) {
 					for key, value := range update[7].(map[string]interface{}) {
 						message.Attachments[key] = value.(string)
 					}
-					messageChan <- *message
+					lp.NewMessageChan <- *message
 				}
 			}
 		}
 		lp.ts = body.Ts
-	}
-}
-
-func (lp *LongPoll) Start(kit ChanKit, messageChan NewMessageChan) {
-	for {
-		lp.Go(kit, messageChan)
 	}
 }
