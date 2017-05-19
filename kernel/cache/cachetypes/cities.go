@@ -9,12 +9,12 @@ import (
 
 type City struct {
 	XMLName xml.Name `xml:"city"`
-	Name string `xml:"name,attr"`
+	Name 	string 	 `xml:"name,attr"`
 }
 
 type XMLCities struct {
-	XMLName xml.Name `xml:"xml"`
-	CitiesList []City `xml:"data>city"`
+	XMLName    xml.Name `xml:"xml"`
+	CitiesList []City   `xml:"data>city"`
 }
 
 type CitiesCache struct {

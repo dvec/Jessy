@@ -27,9 +27,9 @@ type DataCache struct {
 func (cache *DataCache) InitCache() {
 	cache.DictionaryCache.Data = *aiml.NewAIML()
 
-	cache.CommandDataCache.Help.InitCache(conf.COMMANDS_DIR_PATH + "/help.xml")
-	cache.CommandDataCache.Cities.InitCache(conf.COMMANDS_DIR_PATH + "/cities.xml")
-	cache.DictionaryCache.UpdateCache(conf.DATA_DIR_PATH + "/dict.aiml.xml")
+	cache.CommandDataCache.Help.InitCache(conf.CommandsDirPath + "/help.xml")
+	cache.CommandDataCache.Cities.InitCache(conf.CommandsDirPath + "/cities.xml")
+	cache.DictionaryCache.UpdateCache(conf.DataDirPath + "/dict.aiml.xml")
 }
 
 func (cache *RssCaches) UpdateRssCache(newCache map[string][]string) {

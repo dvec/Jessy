@@ -8,20 +8,20 @@ import (
 )
 
 type Help struct {
-	XMLName xml.Name `xml:"category"`
-	Name string `xml:"name,attr"`
-	Title string `xml:"title"`
-	State string `xml:"state"`
-	Description string `xml:"description"`
-	Samples []struct {
+	XMLName	    xml.Name `xml:"category"`
+	Name 	    string   `xml:"name,attr"`
+	Title	    string   `xml:"title"`
+	State	    string   `xml:"state"`
+	Description string   `xml:"description"`
+	Samples	    []struct {
 		XMLName xml.Name `xml:"sample"`
-		Body string `xml:"body"`
-		Out string `xml:"out"`
-	} `xml:"samples>sample"`
+		Body    string         `xml:"body"`
+		Out     string   `xml:"out"`
+	}		     `xml:"samples>sample"`
 }
 
 type XMLHelp struct {
-	xml.Name `xml:"xml"`
+	xml.Name 	`xml:"xml"`
 	HelpList []Help `xml:"help>category"` //TODO FIX
 }
 

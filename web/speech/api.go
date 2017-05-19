@@ -17,11 +17,11 @@ func RequestAPI(text string, kit vk.ChanKit) {
 	body.Set("text", text)
 	body.Set("format", "mp3")
 	body.Set("lang", "ru")
-	body.Set("speaker", conf.DEFAULT_SPEAKER)
-	body.Set("emotion", conf.DEFAULT_EMOTION)
-	body.Set("key", conf.YANDEX_API_KEY)
+	body.Set("speaker", conf.DefaultSpeaker)
+	body.Set("emotion", conf.DefaultEmotion)
+	body.Set("key", conf.YandexApiKey)
 
-	urlPath, _ := url.ParseRequestURI(conf.YANDEX_API_URL)
+	urlPath, _ := url.ParseRequestURI(conf.YandexApiUrl)
 	urlPath.Path = "/generate"
 	urlStr := fmt.Sprintf("%v", urlPath)
 

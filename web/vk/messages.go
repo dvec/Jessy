@@ -19,15 +19,19 @@ type Message struct {
 type NewMessageChan chan Message
 
 type LongPoll struct {
-	key	string
-	server	string
-	ts	int64
+	key    string
+	server string
+	ts     int64
 	NewMessageChan
 }
 
 const (
-	UNREAD = 1
-	CHAT = 16
+	//FLAGS
+	unread = 1  //Unread message flag
+	chat   = 16 //Chat message flag
+
+	//LONG POLL
+	requestBody = "https://%v?act=a_check&key=%v&ts=%v&wait=%v&mode=2&version=1"
 )
 
 func (lp *LongPoll) Start(chanKit ChanKit) {
@@ -42,6 +46,7 @@ func (lp *LongPoll) Start(chanKit ChanKit) {
 	lp.key = response["key"].(string)
 	lp.server = response["server"].(string)
 	lp.ts = int64(response["ts"].(float64))
+	lp.NewMessageChan = make(NewMessageChan)
 
 	for {
 		lp.Go(chanKit)
@@ -49,7 +54,7 @@ func (lp *LongPoll) Start(chanKit ChanKit) {
 }
 
 func (lp *LongPoll) Go(chanKit ChanKit) {
-	resp, err := http.Get(fmt.Sprintf("https://%v?act=a_check&key=%v&ts=%v&wait=%v&mode=2&version=1", lp.server, lp.key, lp.ts, conf.VK_TIMEOUT))
+	resp, err := http.Get(fmt.Sprintf(requestBody, lp.server, lp.key, lp.ts, conf.VkTimeout))
 	if err != nil {
 		log.Println("[ERROR] [Messages::Go]: failed to get response: ", err)
 		return
@@ -86,7 +91,7 @@ func (lp *LongPoll) Go(chanKit ChanKit) {
 			//TODO ADD NEW CASES
 			case 4: //New message action
 				label := update[2].(float64)
-				if label == UNREAD || label == UNREAD + CHAT {
+				if label == unread || label == unread+chat {
 					//If message 1 (Message not read) + 16 (Message sent via chat) = 17
 					message := new(Message)
 					message.Id = int64(update[1].(float64))
@@ -96,6 +101,7 @@ func (lp *LongPoll) Go(chanKit ChanKit) {
 					for key, value := range update[7].(map[string]interface{}) {
 						message.Attachments[key] = value.(string)
 					}
+
 					lp.NewMessageChan <- *message
 				}
 			}

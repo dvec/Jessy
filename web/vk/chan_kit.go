@@ -1,18 +1,18 @@
 package vk
 
 type Request struct {
-	Name	string
-	Params 	map[string]string
+	Name   string
+	Params map[string]string
 }
 
 type Answer struct {
-	Output 	map[string]interface{}
-	Error	error
+	Output map[string]interface{}
+	Error  error
 }
 
 type ChanKit struct {
-	RequestChan	chan Request
-	AnswerChan	chan Answer
+	RequestChan chan Request
+	AnswerChan  chan Answer
 }
 
 func (chanKit ChanKit)MakeRequest(name string, params map[string]string) Answer {

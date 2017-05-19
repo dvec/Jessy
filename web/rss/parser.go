@@ -41,7 +41,7 @@ func ParseRss(url string, args ...string) (out []string) {
 		from = strings.Index(code, begin) + len(begin)
 		to = strings.Index(code, end)
 		if from == -1 || to == -1 { break }
-		if to - from < conf.MAX_MESSAGE_LEN {
+		if to - from < conf.MaxMessageLen {
 			out = append(out, code[from:to])
 		}
 		code = code[to+len(end):]
