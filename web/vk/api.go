@@ -11,7 +11,6 @@ import (
 	"main/conf"
 )
 
-
 type Api struct {
 	AccessToken 	string
 	ChanKit		ChanKit
