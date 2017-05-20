@@ -29,7 +29,7 @@ func UpdateRss(cache *cache.RssCaches) {
 	log.Print("[INFO] Start updating files")
 	for _, value := range patches {
 		value.cache.Lock()
-		value.cache.Data = ParseRss(value.webPath)
+		value.cache.Data = GetRSSData(value.webPath)
 		value.cache.Unlock()
 		log.Print("[INFO] Successfully updated ", value.path)
 	}

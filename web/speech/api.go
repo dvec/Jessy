@@ -11,7 +11,8 @@ import (
 	"main/web/vk"
 )
 
-//TODO MAKE
+//Speech API project has been frozen because vk.com doesn't allows audio uploading for groups
+//TODO DEFROST
 func RequestAPI(text string, kit vk.ChanKit) {
 	body := url.Values{}
 	body.Set("text", text)

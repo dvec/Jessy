@@ -5,39 +5,57 @@ import (
 	"net/http"
 	"io/ioutil"
 	"golang.org/x/net/html/charset"
-	"log"
 	"main/conf"
 )
 
-func check(err error) {
-	if err != nil {
-		log.Println("Failed to parse rss: ", err)
-	}
+const (
+	begin = "<![CDATA[" //The expression to begin useful data
+	end   = "]]>" //The expression to end useful data
+)
+
+//Values that will be replaced
+var filter = []struct{
+	old string //Old value
+	new string //New value
+}{
+	{"<a>", ""}, 		{"</a>", ""},
+	{"<p>", ""}, 		{"</p>", ""},
+	{"<em>", ""},		{"</em>", ""},
+	{"<pre>", ""},		{"</pre>", ""},
+	{"<code>", ""},	{"</code>", ""},
+	{"<li>", ""},		{"</li>", ""},
+	{"<ol>", ""},		{"</ol>", ""},
+	{"<ul>", ""},		{"</ul>", ""},
+	{"<br>", "\n"},	{"<a href=", ""},
+	{"&lt;", "\""},	{"&gt;", "\""},
+	{"&quot;", "\""},	{">", " "},
 }
 
-func ParseRss(url string, args ...string) (out []string) {
-	var begin, end string
-	if len(args) == 2 {
-		begin = args[0]
-		end = args[1]
-	} else {
-		begin = "<![CDATA["
-		end = "]]>"
-	}
+//A function that loads and parses RSS data
+func GetRSSData(url string) ([]string, error) {
+	var out []string
 
-	resp, receivingError := http.Get(url)
-	check(receivingError)
+	//Receiving data
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
-	utf8, decodingError := charset.NewReader(resp.Body, resp.Header.Get("Content-Type"))
-	check(decodingError)
-
-	body, parsingError := ioutil.ReadAll(utf8)
-	check(parsingError)
-
+	//Reading data
+	decodedData, err := charset.NewReader(resp.Body, resp.Header.Get("Content-Type")) //Setting the encoding
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(decodedData)
+	if err != nil {
+		return nil, err
+	}
 	code := string(body)
+
+	//Parsing useful data
 	var from, to int
-	for true {
+	for {
 		from = strings.Index(code, begin) + len(begin)
 		to = strings.Index(code, end)
 		if from == -1 || to == -1 { break }
@@ -47,28 +65,12 @@ func ParseRss(url string, args ...string) (out []string) {
 		code = code[to+len(end):]
 	}
 
-	filter := []struct{
-		old string
-		new string
-	}{
-		{"<a>", ""}, 		{"</a>", ""},
-		{"<p>", ""}, 		{"</p>", ""},
-		{"<em>", ""},		{"</em>", ""},
-		{"<pre>", ""},		{"</pre>", ""},
-		{"<code>", ""},	{"</code>", ""},
-		{"<li>", ""},		{"</li>", ""},
-		{"<ol>", ""},		{"</ol>", ""},
-		{"<ul>", ""},		{"</ul>", ""},
-		{"<br>", "\n"},	{"<a href=", ""},
-		{"&lt;", "\""},		{"&gt;", "\""},
-		{"&quot;", "\""},	{">", " "},
-	}
-
+	//Filtering a data
 	for _, replacement := range filter {
 		for index, story := range out {
 			out[index] = strings.Replace(story, replacement.old, replacement.new, -1)
 		}
 	}
 
-	return
+	return out, nil
 }
