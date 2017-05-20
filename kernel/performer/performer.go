@@ -1,11 +1,11 @@
-package kernel
+package performer
 
 import (
-	"strconv"
 	"strings"
-	"main/kernel/commands"
+	"main/kernel/performer/functions"
 	"log"
 	"fmt"
+	"main/kernel/commands"
 )
 
 const (
@@ -16,17 +16,19 @@ const (
 	internalErrorMessage	= "Internal error"
 )
 
-var commandsList = map[string]func(args commands.FuncArgs) {
-	"state": commands.GetState,
-	"help": commands.GetHelp,
-	"cities": commands.Cities,
+
+var CommandsList = map[string]func(args functions.FuncArgs) {
+	"state":       commands.GetState,
+	"help":        commands.GetHelp,
+	"cities":      commands.Cities,
 	"information": commands.GetGen,
-	"bash": commands.Bash,
-	"ithappens": commands.IThappens,
-	"zadolbali": commands.Zadolbali,
-	"news": commands.News,
+	"bash":        commands.Bash,
+	"ithappens":   commands.IThappens,
+	"zadolbali":   commands.Zadolbali,
+	"news":        commands.News,
 }
 
+//This function find flags in the text
 func findFlags(text string, flags []string) (map[string]string, string) {
 	out := make(map[string]string)
 	minFlagindex := len(text)
@@ -46,45 +48,47 @@ func findFlags(text string, flags []string) (map[string]string, string) {
 	return out, text[:minFlagindex]
 }
 
-func checkInterceptIndications(args commands.FuncArgs) bool {
+//This function checks if need to doing interception for this message
+func checkInterceptIndications(args functions.FuncArgs) bool {
 	args.InterceptIndications.Lock()
 	defer args.InterceptIndications.Unlock()
 	if args.InterceptIndications.InterceptedMessage[args.Message.UserId] != nil {
-		args.InterceptIndications.InterceptedMessage[args.Message.UserId] <- args.Message
 		return true
 	}
 	return false
 }
 
-func Perform(args commands.FuncArgs) {
-	if checkInterceptIndications(args) { return }
+//Main performing function
+func Perform(args functions.FuncArgs) {
+	if checkInterceptIndications(args) {
+		args.InterceptIndications.InterceptedMessage[args.Message.UserId] <- args.Message
+		return
+	}
+
 	text := strings.ToLower(strings.Trim(args.Message.Text, inputCutset))
-	log.Println("[INFO] No command detected. Running performation")
 	args.DataCache.DictionaryCache.Lock()
-	answer, err := args.DataCache.DictionaryCache.Data.Respond(strings.ToLower(text))
+	answer, err := args.DataCache.DictionaryCache.Data.Respond(strings.ToLower(text)) //Gets answer
 	args.DataCache.DictionaryCache.Unlock()
 	if err != nil {
 		log.Println("[ERROR] [main::kernel::performer.go] Failed to get answer: ", err)
 	}
 
-	params := map[string]string{
-		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-	}
-	flags, newMessage := findFlags(answer, []string{attachFlag, callFlag})
-	params["message"] = newMessage
-	params["attachment"] = flags["attach"]
+	flags, message := findFlags(answer, []string{attachFlag, callFlag}) //Checks flags
+	//Checks command call
 	if flags["call"] != "" {
+		//Gets function params
 		funcParams := strings.Split(flags[callFlag], callSep)
 		name := funcParams[0]
 
-		if commandsList[name] != nil {
+		//Runs command
+		if CommandsList[name] != nil {
 			args.Message.Text = funcParams[1]
-			commandsList[name](args)
+			CommandsList[name](args)
 			return
 		} else {
-			params["message"] = internalErrorMessage
+			message = internalErrorMessage
 		}
 	}
 
-	args.ApiChan.MakeRequest("messages.send", params)
+	args.Reply(message, flags["attach"]) //Sends answer to the user
 }

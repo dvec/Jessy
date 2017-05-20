@@ -28,10 +28,10 @@ const (
 )
 
 var emojiDict = map[string]string{
-	"ready": "&#128215;",
-	"test": "&#128217;",
-	"error": "&#128213;",
-	"dev": "&#128216;",
+	"ready": "&#128215;", //Command is ready
+	"test": "&#128217;", //Command is testing
+	"error": "&#128213;", //Command not working
+	"dev": "&#128216;", //Command in development
 
 }
 
@@ -53,15 +53,15 @@ func IfMatch(args []string, template []string) bool {
 	l: for index, word := range args {
 		if index < len(template) {
 			switch template[index] {
-			case IntegerTag:
+			case IntegerTag: //Must be integer
 				_, err := strconv.ParseInt(word, 10, 64)
 				if err != nil {
 					return false
 				}
+			case AnythingTag: //Anything
+				break l
 			case StringTag:
 				//TODO ADD
-			case AnythingTag:
-				break l
 			}
 		}
 

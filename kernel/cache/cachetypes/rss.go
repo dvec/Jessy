@@ -7,9 +7,10 @@ import (
 
 type RssCache struct {
 	sync.Mutex
-	Data []string
+	Data []string //Writing array
 }
 
+//Choose random writing
 func (rssCache *RssCache) ChooseRandom() string {
 	return rssCache.Data[rand.Intn(len(rssCache.Data) - 1)]
 }

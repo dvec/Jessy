@@ -1,24 +1,15 @@
 package commands
 
 import (
-	"time"
-	"math/rand"
-	"sort"
-	"strconv"
 	"strings"
-	"fmt"
 	"main/kernel/commands/tools"
-	"main/web/vk"
-	"main/kernel/cache"
-	"main/kernel/interception"
+	"strconv"
+	"sort"
+	"time"
+	"fmt"
+	"math/rand"
+	"main/kernel/performer/functions"
 )
-
-type FuncArgs struct {
-	ApiChan vk.ChanKit
-	Message vk.Message
-	DataCache cache.DataCache
-	InterceptIndications interception.Indications
-}
 
 const (
 	//GET_STATE
@@ -42,7 +33,7 @@ const (
 	incorrectSymbolError 	= `Ты должен назвать слово на букву "%v"`
 )
 
-func GetState(args FuncArgs) {
+func GetState(args functions.FuncArgs) {
 	start := time.Now().UnixNano()
 	sort.Ints(rand.Perm(1000))
 	metering := strconv.FormatInt(time.Now().UnixNano() - start, 10)
@@ -52,7 +43,7 @@ func GetState(args FuncArgs) {
 	})
 }
 
-func GetGen(args FuncArgs) {
+func GetGen(args functions.FuncArgs) {
 	var message string
 	information := strconv.FormatInt(int64(tools.GetRandomNum(args.Message.Text)%100), 10)
 	message = fmt.Sprintf(getGenAnswer, information)
@@ -62,7 +53,7 @@ func GetGen(args FuncArgs) {
 	})
 }
 
-func GetHelp(args FuncArgs) {
+func GetHelp(args functions.FuncArgs) {
 	var message string
 	if len(args.Message.Text) != 1 {
 		message = tools.GetHelp(args.Message.Text, args.DataCache.CommandDataCache.Help)
@@ -75,28 +66,28 @@ func GetHelp(args FuncArgs) {
 	})
 }
 
-func Bash(args FuncArgs) {
+func Bash(args functions.FuncArgs) {
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
 		"message": args.DataCache.RssCache.Bash.ChooseRandom(),
 	})
 }
 
-func IThappens(args FuncArgs) {
+func IThappens(args functions.FuncArgs) {
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
 		"message": args.DataCache.RssCache.IThappens.ChooseRandom(),
 	})
 }
 
-func Zadolbali(args FuncArgs) {
+func Zadolbali(args functions.FuncArgs) {
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
 		"message": args.DataCache.RssCache.Zadolbali.ChooseRandom(),
 	})
 }
 
-func News(args FuncArgs) {
+func News(args functions.FuncArgs) {
 	words := strings.Split(args.Message.Text, " ")
 	var message string
 	if tools.IfMatch(words, []string{"i"}) {
@@ -116,7 +107,7 @@ func News(args FuncArgs) {
 	})
 }
 
-func Cities(args FuncArgs) {
+func Cities(args functions.FuncArgs) {
 	args.InterceptIndications.Add(args.Message.UserId)
 	args.ApiChan.MakeRequest("messages.send", map[string]string{
 		"user_id": strconv.FormatInt(args.Message.UserId, 10),
@@ -187,10 +178,10 @@ func Cities(args FuncArgs) {
 
 		answer = winMessage
 
-		SEND: args.ApiChan.MakeRequest("messages.send", map[string]string{
-			"user_id": strconv.FormatInt(args.Message.UserId, 10),
-			"message": answer,
-		})
+	SEND: args.ApiChan.MakeRequest("messages.send", map[string]string{
+		"user_id": strconv.FormatInt(args.Message.UserId, 10),
+		"message": answer,
+	})
 		args.DataCache.CommandDataCache.Cities.Unlock()
 	}
 }

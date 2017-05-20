@@ -7,11 +7,11 @@ import ("os"
 	"main/conf"
 	"main/web/vk"
 	"main/web/rss"
-	"main/kernel"
 	"main/kernel/cache"
 	"main/kernel/interception"
-	"main/kernel/commands"
 	"strconv"
+	"main/kernel/performer/functions"
+	"main/kernel/performer"
 )
 
 //Is log will be written
@@ -30,9 +30,9 @@ var (
 		{conf.DataDirPath + "/dict.aiml.xml", false},  // data/dict.aiml.xml
 		{conf.LogDirPath, true},                       // data/log
 		{logFilePath, false},                          // data/log/xxxxxxxxxx.log
-		{conf.CommandsDirPath, true},                  // data/commands
-		{conf.CommandsDirPath + "/help.xml", false},   // data/commands/help.xml
-		{conf.CommandsDirPath + "/cities.xml", false}, // data/commands/cities.xml
+		{conf.CommandsDirPath, true},                  // data/functions
+		{conf.CommandsDirPath + "/help.xml", false},   // data/functions/help.xml
+		{conf.CommandsDirPath + "/cities.xml", false}, // data/functions/cities.xml
 	}
 )
 
@@ -89,11 +89,11 @@ func main() {
 		select {
 		case message := <- lp.NewMessageChan: //New message
 			log.Println("[INFO] New message detected: ", message)
-			args := commands.FuncArgs{
+			args := functions.FuncArgs{
 				ApiChan: api.ChanKit, Message: message,
 				DataCache: dataCache, InterceptIndications: indications,
 			} //Creating func params
-			go kernel.Perform(args)
+			go performer.Perform(args)
 		case request := <- api.ChanKit.RequestChan:                   //New api request
 			out, err := api.Request(request.Name, request.Params) //Request API method
 			api.ChanKit.AnswerChan <- vk.Answer{out, err}         //Sending API answer back
