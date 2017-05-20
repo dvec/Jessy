@@ -5,6 +5,8 @@ import (
 	"main/kernel/cache"
 	"main/kernel/interception"
 	"strconv"
+	"main/conf"
+	"errors"
 )
 
 const messageSendMethod = "messages.send"
@@ -18,16 +20,21 @@ type FuncArgs struct {
 }
 
 //Send message back to the user
-func (args *FuncArgs) Reply(message string, attach ...string) {
+func (args *FuncArgs) Reply(message string, attach ...string) error {
+	if len(message) >= conf.MaxMessageLen {
+		return errors.New("Length too long")
+	}
 	var attachments string
 
-	if len(attachments) != 0 {
+	if len(attach) != 0 {
 		attachments = attach[0]
 	}
 
 	args.ApiChan.MakeRequest(messageSendMethod, map[string]string{
-		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": message,
-		"attachments": attachments,
+		"user_id":     strconv.FormatInt(args.Message.UserId, 10),
+		"message":     message,
+		"attachment": attachments,
 	})
+
+	return nil
 }

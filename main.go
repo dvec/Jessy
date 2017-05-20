@@ -94,10 +94,10 @@ func main() {
 				DataCache: dataCache, InterceptIndications: indications,
 			} //Creating func params
 			go performer.Perform(args)
-		case request := <- api.ChanKit.RequestChan:                   //New api request
+		case request := <- api.ChanKit.RequestChan: //New api request
 			out, err := api.Request(request.Name, request.Params) //Request API method
-			api.ChanKit.AnswerChan <- vk.Answer{out, err}         //Sending API answer back
-			time.Sleep(time.Second / conf.MaxRequestPerSecond)    //Delay
+			api.ChanKit.AnswerChan <- vk.Answer{out, err} //Sending API answer back
+			time.Sleep(time.Second / conf.MaxRequestPerSecond) //Delay
 		case <- time.After(conf.RssUpdateDelay): //Time to update cache
 			log.Println("[INFO] Time to update RSS files")
 			go rss.UpdateRss(&dataCache.RssCache)  //Updating RSS in new thread

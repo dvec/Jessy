@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"io/ioutil"
 	"golang.org/x/net/html/charset"
-	"main/conf"
 )
 
 const (
@@ -59,9 +58,7 @@ func GetRSSData(url string) ([]string, error) {
 		from = strings.Index(code, begin) + len(begin)
 		to = strings.Index(code, end)
 		if from == -1 || to == -1 { break }
-		if to - from < conf.MaxMessageLen {
-			out = append(out, code[from:to])
-		}
+		out = append(out, code[from:to])
 		code = code[to+len(end):]
 	}
 

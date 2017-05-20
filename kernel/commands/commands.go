@@ -37,20 +37,14 @@ func GetState(args functions.FuncArgs) {
 	start := time.Now().UnixNano()
 	sort.Ints(rand.Perm(1000))
 	metering := strconv.FormatInt(time.Now().UnixNano() - start, 10)
-	args.ApiChan.MakeRequest("messages.send", map[string]string{
-		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": fmt.Sprintf(getStateAnswer, metering),
-	})
+	args.Reply(fmt.Sprintf(getStateAnswer, metering))
 }
 
 func GetGen(args functions.FuncArgs) {
 	var message string
 	information := strconv.FormatInt(int64(tools.GetRandomNum(args.Message.Text)%100), 10)
 	message = fmt.Sprintf(getGenAnswer, information)
-	args.ApiChan.MakeRequest("messages.send", map[string]string{
-		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": message,
-	})
+	args.Reply(message)
 }
 
 func GetHelp(args functions.FuncArgs) {
@@ -60,31 +54,19 @@ func GetHelp(args functions.FuncArgs) {
 	} else {
 		message = tools.GetHelp(tools.DefaultTag, args.DataCache.CommandDataCache.Help)
 	}
-	args.ApiChan.MakeRequest("messages.send", map[string]string{
-		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": message,
-	})
+	args.Reply(message)
 }
 
 func Bash(args functions.FuncArgs) {
-	args.ApiChan.MakeRequest("messages.send", map[string]string{
-		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": args.DataCache.RssCache.Bash.ChooseRandom(),
-	})
+	args.Reply(args.DataCache.RssCache.Bash.ChooseRandom())
 }
 
 func IThappens(args functions.FuncArgs) {
-	args.ApiChan.MakeRequest("messages.send", map[string]string{
-		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": args.DataCache.RssCache.IThappens.ChooseRandom(),
-	})
+	args.Reply(args.DataCache.RssCache.IThappens.ChooseRandom())
 }
 
 func Zadolbali(args functions.FuncArgs) {
-	args.ApiChan.MakeRequest("messages.send", map[string]string{
-		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": args.DataCache.RssCache.Zadolbali.ChooseRandom(),
-	})
+	args.Reply(args.DataCache.RssCache.Zadolbali.ChooseRandom())
 }
 
 func News(args functions.FuncArgs) {
@@ -101,18 +83,12 @@ func News(args functions.FuncArgs) {
 		message = strings.Join(args.DataCache.RssCache.News.Data[:3], "\n")
 	}
 
-	args.ApiChan.MakeRequest("messages.send", map[string]string{
-		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": message,
-	})
+	args.Reply(message)
 }
 
 func Cities(args functions.FuncArgs) {
 	args.InterceptIndications.Add(args.Message.UserId)
-	args.ApiChan.MakeRequest("messages.send", map[string]string{
-		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": welcomeMessage,
-	})
+	args.Reply(welcomeMessage)
 
 	already := []string{}
 	var expectedSymbol rune
@@ -132,10 +108,7 @@ func Cities(args functions.FuncArgs) {
 
 		if message.Text == endCommand {
 			args.InterceptIndications.Delete(args.Message.UserId)
-			args.ApiChan.MakeRequest("messages.send", map[string]string{
-				"user_id": strconv.FormatInt(args.Message.UserId, 10),
-				"message": endMessage,
-			})
+			args.Reply(endMessage)
 			return
 		}
 
@@ -178,10 +151,7 @@ func Cities(args functions.FuncArgs) {
 
 		answer = winMessage
 
-	SEND: args.ApiChan.MakeRequest("messages.send", map[string]string{
-		"user_id": strconv.FormatInt(args.Message.UserId, 10),
-		"message": answer,
-	})
+		SEND: args.Reply(answer)
 		args.DataCache.CommandDataCache.Cities.Unlock()
 	}
 }
