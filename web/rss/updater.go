@@ -13,7 +13,7 @@ func UpdateRss(cache *cache.RssCaches) {
 		webPath string //Path to the site with RSS
 	}{
 		{&cache.News, "http://lenta.ru/rss"},
-		{&cache.Bash, "http://bash.im/rss/"},
+		{&cache.Bash, "http://bash.im/rss"},
 		{&cache.IThappens, "http://ithappens.me/rss"},
 		{&cache.Zadolbali, "http://zadolba.li/rss"},
 	}

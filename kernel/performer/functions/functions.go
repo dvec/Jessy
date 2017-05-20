@@ -6,7 +6,6 @@ import (
 	"main/kernel/interception"
 	"strconv"
 	"main/conf"
-	"errors"
 )
 
 const messageSendMethod = "messages.send"
@@ -20,9 +19,9 @@ type FuncArgs struct {
 }
 
 //Send message back to the user
-func (args *FuncArgs) Reply(message string, attach ...string) error {
-	if len(message) >= conf.MaxMessageLen {
-		return errors.New("Length too long")
+func (args *FuncArgs) Reply(message string, attach ...string) {
+	if len(message) > conf.MaxMessageLen {
+		message = message[:conf.MaxMessageLen] + "..."
 	}
 	var attachments string
 
@@ -35,6 +34,4 @@ func (args *FuncArgs) Reply(message string, attach ...string) error {
 		"message":     message,
 		"attachment": attachments,
 	})
-
-	return nil
 }

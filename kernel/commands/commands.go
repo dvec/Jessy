@@ -20,6 +20,7 @@ const (
 
 	//NEWS
 	tooMuchNewsCountError	= "Я не помню столько новостей"
+	badNewsCountError	= "Я не могу сказать тебе столько новостей. Сам попробуй!"
 
 	//CITIES
 	endCommand		= "хватит"
@@ -76,6 +77,8 @@ func News(args functions.FuncArgs) {
 		count, _ := strconv.ParseInt(words[0], 10, 8)
 		if count > 7 {
 			message = tooMuchNewsCountError
+		} else if count <= 0 {
+			message = badNewsCountError
 		} else {
 			message = strings.Join(args.DataCache.RssCache.News.Data[:count], "\n")
 		}

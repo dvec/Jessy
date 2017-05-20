@@ -23,7 +23,7 @@ const (
 		" \nпомощь [название команды]"
 	complexAnswer	= `Справка по команде "%v": %v %v`
 	sampleIntroText	= "Примеры использования: \n"
-	sampleTemplate	= "USER> %v\nJESSY> %v"
+	sampleTemplate	= "USER> %v \nJESSY> %v \n"
 	noHelpError	= "Нет справки по такой команде"
 )
 
