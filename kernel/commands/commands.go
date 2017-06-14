@@ -13,25 +13,24 @@ import (
 
 const (
 	//GET_STATE
-	getStateAnswer		= "Я отсортировала массив из 1000 элементов за %v наносекунд"
+	getStateAnswer = "Я отсортировала массив из 1000 элементов за %v наносекунд"
 
 	//GET_GEN
-	getGenAnswer		= "С вероятностью %v%%"
+	getGenAnswer = "С вероятностью %v%%"
 
 	//NEWS
-	tooMuchNewsCountError	= "Я не помню столько новостей"
-	badNewsCountError	= "Я не могу сказать тебе столько новостей. Сам попробуй!"
+	tooMuchNewsCountError = "Я не помню столько новостей"
+	badNewsCountError = "Я не могу сказать тебе столько новостей. Сам попробуй!"
 
 	//CITIES
-	endCommand		= "хватит"
-	endMessage		= "Игра прекращена. Ты можешь продолжать со мной общение"
-	cityCutset		= "ьъый" //To delete these strings from the city name
-	winMessage		= "Ты выиграл. Мои поздравления! Я начинаю новую игру"
-	alreadyError		= "Уже было!"
-	badInputError 		= "Используй только русские буквы!"
-	welcomeMessage		= `Добро пожаловать в игру 'города'! Для выхода напиши "хватит". Начинай!`
-	badInputLenError	= "Город не может состоять только из этих букв"
-	incorrectSymbolError 	= `Ты должен назвать слово на букву "%v"`
+	endCommand = "хватит"
+	endMessage = "Игра прекращена. Ты можешь продолжать со мной общение"
+	cityCutset = "ьъый" //To delete these strings from the city name
+	winMessage = "Ты выиграл. Мои поздравления! Я начинаю новую игру"
+	alreadyError = "Уже было!"
+	welcomeMessage = `Добро пожаловать в игру 'города'! Для выхода напиши "хватит". Начинай!`
+	badInputLenError = "Город не может состоять только из этих букв"
+	incorrectSymbolError = `Ты должен назвать слово на букву "%v"`
 )
 
 func GetState(args functions.FuncArgs) {
@@ -96,65 +95,58 @@ func Cities(args functions.FuncArgs) {
 	already := []string{}
 	var expectedSymbol rune
 	for {
-		var answer string
-		message := <- args.InterceptIndications.InterceptedMessage[args.Message.UserId]
-		message.Text = strings.TrimRight(strings.ToLower(message.Text), cityCutset)
+		func() {
+			var answer string
+			message := <-args.InterceptIndications.InterceptedMessage[args.Message.UserId]
+			message.Text = strings.TrimRight(strings.ToLower(message.Text), cityCutset)
 
-		runes := []rune(message.Text)
+			runes := []rune(message.Text)
 
-		args.DataCache.CommandDataCache.Cities.Lock()
-
-		if len(message.Text) == 0 {
-			answer = badInputLenError
-			goto SEND
-		}
-
-		if message.Text == endCommand {
-			args.InterceptIndications.Delete(args.Message.UserId)
-			args.Reply(endMessage)
-			return
-		}
-
-		if expectedSymbol != 0 && expectedSymbol != runes[0] {
-			answer = fmt.Sprintf(incorrectSymbolError, string(expectedSymbol))
-			goto SEND
-		}
-
-		if tools.Contains(already, message.Text) {
-			answer = alreadyError
-			goto SEND
-		}
-		already = append(already, message.Text)
-
-		for _, char := range message.Text {
-			if int32('а') >  char || char > int32('я') { //checks if text contains only russian symbols
-				answer = badInputError
-				goto SEND
+			if len(message.Text) == 0 {
+				args.Reply(badInputLenError)
+				return
 			}
-		}
 
-		{
-			lastSymbol := runes[len(runes) - 1]
+			if message.Text == endCommand {
+				args.InterceptIndications.Delete(args.Message.UserId)
+				args.Reply(endMessage)
+				return
+			}
+
+			if expectedSymbol != 0 && expectedSymbol != runes[0] {
+				args.Reply(fmt.Sprintf(incorrectSymbolError, string(expectedSymbol)))
+				return
+			}
+
+			if tools.Contains(already, message.Text) {
+				args.Reply(alreadyError)
+				return
+			}
+			already = append(already, message.Text)
+
+			args.DataCache.CommandDataCache.Cities.Lock()
+			defer args.DataCache.CommandDataCache.Cities.Unlock()
+			lastSymbol := runes[len(runes)-1]
 			for _, city := range args.DataCache.CommandDataCache.Cities.Data.CitiesList {
 				if city.Name == "" {
-					continue
+					args.DataCache.CommandDataCache.Cities.Unlock()
+					return
 				}
 
-				if []rune(strings.ToLower(city.Name))[0] == lastSymbol {
+				answerRunes := []rune(strings.TrimRight(strings.ToLower(city.Name), cityCutset))
+				fmt.Println(string(answerRunes[0]), string(lastSymbol))
+				if answerRunes[0] == lastSymbol {
 					if !tools.Contains(already, strings.ToLower(city.Name)) {
-						answer = city.Name
-						answerRunes := []rune(strings.TrimRight(answer, cityCutset))
-						expectedSymbol = answerRunes[len(answerRunes) - 1]
+						expectedSymbol = answerRunes[len(answerRunes)-1]
 						already = append(already, strings.ToLower(answer))
-						goto SEND
+						args.Reply(city.Name)
+						return
 					}
 				}
 			}
-		}
 
-		answer = winMessage
-
-		SEND: args.Reply(answer)
-		args.DataCache.CommandDataCache.Cities.Unlock()
+			already = []string{}
+			args.Reply(winMessage)
+		}()
 	}
 }

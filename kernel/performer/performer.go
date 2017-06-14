@@ -13,7 +13,7 @@ const (
 	callFlag		= "call"
 	attachFlag 		= "attach"
 	inputCutset		= "?!():.,|"
-	internalErrorMessage	= "Internal error"
+	internalErrorMessage	= "Упс... На сервере произошла ошибка"
 )
 
 
@@ -31,7 +31,7 @@ var CommandsList = map[string]func(args functions.FuncArgs) {
 //This function find flags in the text
 func findFlags(text string, flags []string) (map[string]string, string) {
 	out := make(map[string]string)
-	minFlagindex := len(text)
+	minFlagIndex := len(text)
 	for _, flag := range flags {
 		begin := fmt.Sprintf("<%v>", flag)
 		end := fmt.Sprintf("</%v>", flag)
@@ -39,13 +39,13 @@ func findFlags(text string, flags []string) (map[string]string, string) {
 		endIndex := strings.Index(text, end)
 		if beginIndex < endIndex {
 			out[flag] = text[beginIndex + len(begin):endIndex]
-			if minFlagindex > beginIndex {
-				minFlagindex = beginIndex
+			if minFlagIndex > beginIndex {
+				minFlagIndex = beginIndex
 			}
 		}
 	}
 
-	return out, text[:minFlagindex]
+	return out, text[:minFlagIndex]
 }
 
 //This function checks if need to doing interception for this message
@@ -70,7 +70,7 @@ func Perform(args functions.FuncArgs) {
 	answer, err := args.DataCache.DictionaryCache.Data.Respond(strings.ToLower(text)) //Gets answer
 	args.DataCache.DictionaryCache.Unlock()
 	if err != nil {
-		log.Println("[ERROR] [main::kernel::performer.go] Failed to get answer: ", err)
+		log.Println("[ERROR] Failed to get answer: ", err)
 	}
 
 	flags, message := findFlags(answer, []string{attachFlag, callFlag}) //Checks flags
@@ -78,7 +78,15 @@ func Perform(args functions.FuncArgs) {
 	if flags["call"] != "" {
 		//Gets function params
 		funcParams := strings.Split(flags[callFlag], callSep)
-		name := funcParams[0]
+		if len(funcParams) < 1 {
+			log.Printf("[INFO] Bad function call on message: %v", args.Message.Text)
+			args.Reply(internalErrorMessage)
+			return
+		} else if len(funcParams) == 1 {
+			funcParams = append(funcParams, "")
+		}
+
+		name := strings.Trim(funcParams[0], " ")
 
 		//Runs command
 		if CommandsList[name] != nil {

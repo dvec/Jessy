@@ -14,7 +14,7 @@ type City struct {
 
 type XMLCities struct {
 	XMLName    xml.Name `xml:"xml"`
-	CitiesList []City   `xml:"data>city"` //Cities array
+	CitiesList []City   `xml:"city"` //Cities array
 }
 
 //Cache for the cities game

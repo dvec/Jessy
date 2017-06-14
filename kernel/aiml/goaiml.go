@@ -4,7 +4,6 @@ package aiml
 
 import (
 	"encoding/xml"
-	"main/conf"
 )
 
 type AIML struct {
@@ -40,8 +39,6 @@ func NewAIML() *AIML {
 		Memory: make(map[string]string),
 		Bot:    make(map[string]string),
 	}
-
-	ret.Bot["name"] = conf.BotName
 
 	return ret
 }

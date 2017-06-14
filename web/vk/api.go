@@ -38,11 +38,12 @@ func (vk *Api) Request(methodName string, params map[string]string) (map[string]
 	resp, err := client.Do(r)
 	if err != nil {
 		log.Println("[ERROR] [main::web::vk::api.go] ", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	//Reading the API answer
-	content, _ := ioutil.ReadAll(resp.Body)
+	content, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +52,7 @@ func (vk *Api) Request(methodName string, params map[string]string) (map[string]
 	data := make(map[string]interface{})
 	if err := json.Unmarshal(content, &data); err != nil {
 		log.Println("[ERROR] [main::web::vk::api.go] ", err)
+		return nil, err
 	}
 
 	return data, nil
